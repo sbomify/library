@@ -1,0 +1,34 @@
+# SBOM workflow for Dependency Track
+#
+# Triggers when dependency-track version or config is updated.
+# Downloads SBOM from GitHub releases.
+#
+# https://github.com/DependencyTrack/dependency-track
+
+name: "SBOM: dependency-track"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/dependency-track/LATEST'
+      - 'apps/dependency-track/config.yaml'
+      - '.github/workflows/apps/dependency-track.yml'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: dependency-track
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+

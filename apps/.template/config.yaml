@@ -1,0 +1,68 @@
+# SBOM App Configuration Template
+#
+# Copy this template to create a new app:
+#   cp -r apps/.template apps/<app-name>
+#   # Edit config.yaml and LATEST (must be valid semver, e.g., 1.2.3)
+#   # Create workflow file
+#
+# Note: Each version only needs to be processed once. Once the SBOM is
+# uploaded to sbomify, it is permanently stored. Simply bump LATEST to
+# the new version when a new release is available.
+#
+# See README.md for full documentation.
+
+# App name (should match folder name)
+name: example-app
+
+# SBOM format: cyclonedx or spdx
+format: cyclonedx
+
+# Source configuration
+source:
+  # Source type: docker | github_release | lockfile | chainguard
+  type: docker
+
+  # ============================================
+  # Docker source options (type: docker)
+  # ============================================
+  # image: "library/nginx"           # Image name (required)
+  # registry: "docker.io"            # Registry URL (default: docker.io)
+  # platform: "linux/amd64"          # Target platform (default: linux/amd64)
+
+  # ============================================
+  # GitHub release options (type: github_release)
+  # ============================================
+  # repo: "owner/repo"               # GitHub repository (required)
+  # asset_pattern: "*.sbom.json"     # Glob pattern for SBOM asset
+  # tag_prefix: "v"                  # Version tag prefix (e.g., "v" for "v1.0.0")
+  # tag_suffix: ""                   # Version tag suffix if any
+
+  # ============================================
+  # Lockfile options (type: lockfile)
+  # ============================================
+  # repo: "owner/repo"               # GitHub repository (required)
+  # lockfile: "package-lock.json"    # Path to lockfile in repo (required)
+  # tag_prefix: "v"                  # Version tag prefix
+  # generator: "auto"                # SBOM generator: cdxgen, syft, or auto
+  # extra_files:                     # Additional files needed for generation
+  #   - "package.json"
+
+  # ============================================
+  # Chainguard options (type: chainguard)
+  # ============================================
+  # image: "nginx"                   # Chainguard image name (required)
+  # registry: "cgr.dev/chainguard"   # Registry (default: cgr.dev/chainguard)
+  # platform: "linux/amd64"          # Target platform (default: linux/amd64)
+  # predicate_type: "https://spdx.dev/Document"  # Attestation type (auto-detected from format)
+
+# sbomify configuration for upload
+sbomify:
+  # Component ID from sbomify dashboard
+  # Get this from: https://app.sbomify.com/components/<id>
+  component_id: "your-component-id-here"
+  # Human-readable name for the component
+  component_name: "Your Component Name"
+  # Optional: Product ID for release tagging (if this component is part of a product)
+  # When set, the SBOM will be tagged with "product_id:version"
+  # product_id: "your-product-id"
+

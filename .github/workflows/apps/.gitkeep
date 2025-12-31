@@ -1,0 +1,5 @@
+# This directory contains per-app workflow files.
+# Each app should have its own workflow that triggers on changes to its folder.
+#
+# See _template.yml for an example workflow.
+

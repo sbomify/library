@@ -1,0 +1,123 @@
+# Lint - Run shellcheck and yamllint on pull requests
+#
+# Ensures consistent quality for bash scripts and YAML files.
+
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - '**.sh'
+      - '**.yaml'
+      - '**.yml'
+      - '.github/workflows/lint.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.sh'
+      - '**.yaml'
+      - '**.yml'
+      - '.github/workflows/lint.yml'
+
+jobs:
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          shellcheck --version
+
+      - name: Run shellcheck
+        run: |
+          echo "Running shellcheck on all .sh files..."
+          echo ""
+
+          failed=0
+          passed=0
+
+          for script in $(find . -name "*.sh" -type f | sort); do
+            echo "Checking: $script"
+            if shellcheck -x -S warning "$script"; then
+              echo "  ✓ Passed"
+              ((passed++))
+            else
+              echo "  ✗ Failed"
+              ((failed++))
+            fi
+            echo ""
+          done
+
+          echo "========================================"
+          echo "Shellcheck Summary: $passed passed, $failed failed"
+          echo "========================================"
+
+          if [[ $failed -gt 0 ]]; then
+            echo "Some scripts failed shellcheck. Please fix the issues above."
+            exit 1
+          fi
+
+          echo "All scripts passed shellcheck!"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Shellcheck Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Script | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          for script in $(find . -name "*.sh" -type f | sort); do
+            if shellcheck -x -S warning "$script" > /dev/null 2>&1; then
+              echo "| \`$script\` | ✓ Passed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| \`$script\` | ✗ Failed |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+  yamllint:
+    name: Yamllint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install yamllint
+        run: |
+          uv tool install yamllint
+          yamllint --version
+
+      - name: Run yamllint
+        run: |
+          echo "Running yamllint on all YAML files..."
+          echo ""
+
+          # Run yamllint with our config
+          yamllint -c .yamllint.yml . || exit 1
+
+          echo ""
+          echo "All YAML files passed yamllint!"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Yamllint Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if yamllint -c .yamllint.yml . > /dev/null 2>&1; then
+            echo "All YAML files passed validation." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Some YAML files have issues. See job output for details." >> $GITHUB_STEP_SUMMARY
+          fi
+

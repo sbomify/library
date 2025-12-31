@@ -1,0 +1,24 @@
+# Dependency Track SBOM Configuration
+#
+# Dependency-Track is an intelligent component analysis platform that allows
+# organizations to identify and reduce risk in the software supply chain.
+#
+# SBOM source: GitHub releases (bom.json artifact)
+# https://github.com/DependencyTrack/dependency-track
+
+name: dependency-track
+
+# Dependency Track publishes CycloneDX SBOMs
+format: cyclonedx
+
+source:
+  type: github_release
+  repo: "DependencyTrack/dependency-track"
+  asset_pattern: "bom.json"
+  # Tags don't have a 'v' prefix (e.g., 4.13.6 not v4.13.6)
+  tag_prefix: ""
+
+sbomify:
+  component_id: "hZSsrKGgp1ZP"
+  component_name: "Dependency Track Bundle"
+

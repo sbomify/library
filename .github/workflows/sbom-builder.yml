@@ -1,0 +1,214 @@
+# Reusable workflow for SBOM extraction and upload
+#
+# This workflow is called by per-app workflows to:
+# 1. Fetch/generate the SBOM for the specified app
+# 2. Upload it to sbomify
+#
+# Note: Each version only needs to be processed once. Once uploaded to sbomify,
+# the SBOM is permanently stored there. This workflow only triggers when the
+# LATEST file changes, ensuring we process each version exactly once.
+#
+# Usage in per-app workflow:
+#   jobs:
+#     build:
+#       uses: ./.github/workflows/sbom-builder.yml
+#       with:
+#         app: nginx
+#       secrets: inherit
+
+name: SBOM Builder
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        description: 'App name (folder name under apps/)'
+        required: true
+        type: string
+      validate:
+        description: 'Validate the SBOM after fetching'
+        required: false
+        type: boolean
+        default: true
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      SBOMIFY_TOKEN:
+        description: 'sbomify API token for upload'
+        required: false
+
+env:
+  # Tool versions
+  YQ_VERSION: "v4.40.5"
+  CRANE_VERSION: "v0.17.0"
+
+jobs:
+  build-and-upload:
+    name: Build SBOM for ${{ inputs.app }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          # Install yq
+          sudo wget -qO /usr/local/bin/yq \
+            "https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
+
+          # Install crane (for Docker attestation extraction)
+          CRANE_TAR="go-containerregistry_Linux_x86_64.tar.gz"
+          CRANE_URL="https://github.com/google/go-containerregistry/releases/download"
+          wget -qO- "${CRANE_URL}/${{ env.CRANE_VERSION }}/${CRANE_TAR}" \
+            | sudo tar -xzf - -C /usr/local/bin crane
+          sudo chmod +x /usr/local/bin crane
+
+          # Verify installations
+          echo "Installed tools:"
+          jq --version
+          yq --version
+          crane version
+
+      - name: Install source-specific tools
+        run: |
+          # Check source type and install required tools
+          SOURCE_TYPE=$(yq -r '.source.type' "apps/${{ inputs.app }}/config.yaml")
+
+          case "$SOURCE_TYPE" in
+            lockfile)
+              echo "Installing cdxgen for lockfile-based SBOM generation..."
+              npm install -g @cyclonedx/cdxgen
+              cdxgen --version
+              ;;
+            chainguard)
+              echo "Installing cosign for Chainguard attestation download..."
+              COSIGN_VERSION="v2.2.2"
+              curl -sLO "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64"
+              sudo install cosign-linux-amd64 /usr/local/bin/cosign
+              rm cosign-linux-amd64
+              cosign version
+              ;;
+            *)
+              echo "App uses $SOURCE_TYPE source, no additional tools needed"
+              ;;
+          esac
+
+      - name: Read app configuration
+        id: config
+        run: |
+          APP_DIR="apps/${{ inputs.app }}"
+
+          # Read version
+          VERSION=$(tr -d '[:space:]' < "${APP_DIR}/LATEST")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+          # Read config values
+          FORMAT=$(yq -r '.format // "cyclonedx"' "${APP_DIR}/config.yaml")
+          echo "format=${FORMAT}" >> $GITHUB_OUTPUT
+
+          SOURCE_TYPE=$(yq -r '.source.type' "${APP_DIR}/config.yaml")
+          echo "source_type=${SOURCE_TYPE}" >> $GITHUB_OUTPUT
+
+          COMPONENT_ID=$(yq -r '.sbomify.component_id // ""' "${APP_DIR}/config.yaml")
+          echo "component_id=${COMPONENT_ID}" >> $GITHUB_OUTPUT
+
+          COMPONENT_NAME=$(yq -r '.sbomify.component_name // ""' "${APP_DIR}/config.yaml")
+          echo "component_name=${COMPONENT_NAME}" >> $GITHUB_OUTPUT
+
+          # Product ID for release tagging (optional)
+          PRODUCT_ID=$(yq -r '.sbomify.product_id // ""' "${APP_DIR}/config.yaml")
+          echo "product_id=${PRODUCT_ID}" >> $GITHUB_OUTPUT
+
+          # Build product release tag if product_id is set
+          if [[ -n "$PRODUCT_ID" ]]; then
+            PRODUCT_RELEASE="[\"${PRODUCT_ID}:${VERSION}\"]"
+            echo "product_release=${PRODUCT_RELEASE}" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Configuration:"
+          echo "  App: ${{ inputs.app }}"
+          echo "  Version: ${VERSION}"
+          echo "  Format: ${FORMAT}"
+          echo "  Source: ${SOURCE_TYPE}"
+          echo "  Component ID: ${COMPONENT_ID}"
+          echo "  Component Name: ${COMPONENT_NAME}"
+          echo "  Product ID: ${PRODUCT_ID:-none}"
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh scripts/**/*.sh
+
+      - name: Fetch SBOM
+        id: fetch
+        env:
+          DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+          LOG_LEVEL: INFO
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Run the fetch script
+          SBOM_FILE="sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}.json"
+
+          ./scripts/fetch-sbom.sh "${{ inputs.app }}" \
+            --output "${SBOM_FILE}" \
+            ${{ inputs.validate && '--validate' || '' }}
+
+          echo "sbom_file=${SBOM_FILE}" >> $GITHUB_OUTPUT
+
+          # Show SBOM info
+          if [[ -f "${SBOM_FILE}" ]]; then
+            echo "SBOM generated successfully!"
+            echo "File size: $(wc -c < "${SBOM_FILE}") bytes"
+
+            # Extract some metadata
+            if [[ "${{ steps.config.outputs.format }}" == "cyclonedx" ]]; then
+              echo "Components: $(jq '.components | length' "${SBOM_FILE}")"
+            elif [[ "${{ steps.config.outputs.format }}" == "spdx" ]]; then
+              echo "Packages: $(jq '.packages | length' "${SBOM_FILE}")"
+            fi
+          fi
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          path: ${{ steps.fetch.outputs.sbom_file }}
+          retention-days: 90
+
+      - name: Upload to sbomify
+        if: ${{ !inputs.dry_run && steps.config.outputs.component_id != '' }}
+        uses: sbomify/github-action@master
+        env:
+          TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
+          COMPONENT_ID: ${{ steps.config.outputs.component_id }}
+          COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
+          COMPONENT_VERSION: ${{ steps.config.outputs.version }}
+          SBOM_FILE: ${{ steps.fetch.outputs.sbom_file }}
+          AUGMENT: true
+          ENRICH: true
+          # Tag with product release if product_id is configured
+          PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+
+      - name: Summary
+        run: |
+          echo "## SBOM Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| App | ${{ inputs.app }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ steps.config.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Format | ${{ steps.config.outputs.format }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Source | ${{ steps.config.outputs.source_type }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dry Run | ${{ inputs.dry_run }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ inputs.dry_run }}" != "true" ]]; then
+            if [[ -n "${{ steps.config.outputs.component_id }}" ]]; then
+              COMP_ID="${{ steps.config.outputs.component_id }}"
+              echo "SBOM uploaded to sbomify component: \`${COMP_ID}\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
