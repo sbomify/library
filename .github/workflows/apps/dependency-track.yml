@@ -10,7 +10,7 @@ name: "SBOM: dependency-track"
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'apps/dependency-track/LATEST'
       - 'apps/dependency-track/config.yaml'

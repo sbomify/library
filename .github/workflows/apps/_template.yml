@@ -15,7 +15,7 @@ name: "SBOM: example-app"
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'apps/example-app/LATEST'
       - 'apps/example-app/config.yaml'
