@@ -146,30 +146,22 @@ jobs:
       - name: Fetch SBOM
         id: fetch
         env:
-          DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
           LOG_LEVEL: INFO
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Run the fetch script
-          SBOM_FILE="sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}.json"
-
           ./scripts/fetch-sbom.sh "${{ inputs.app }}" \
-            --output "${SBOM_FILE}" \
+            --output "sbom.json" \
             ${{ inputs.validate && '--validate' || '' }}
 
-          echo "sbom_file=${SBOM_FILE}" >> $GITHUB_OUTPUT
+          ls -la sbom.json
+          echo "sbom_file=sbom.json" >> $GITHUB_OUTPUT
 
           # Show SBOM info
-          if [[ -f "${SBOM_FILE}" ]]; then
-            echo "SBOM generated successfully!"
-            echo "File size: $(wc -c < "${SBOM_FILE}") bytes"
-
-            # Extract some metadata
-            if [[ "${{ steps.config.outputs.format }}" == "cyclonedx" ]]; then
-              echo "Components: $(jq '.components | length' "${SBOM_FILE}")"
-            elif [[ "${{ steps.config.outputs.format }}" == "spdx" ]]; then
-              echo "Packages: $(jq '.packages | length' "${SBOM_FILE}")"
-            fi
+          echo "File size: $(wc -c < sbom.json) bytes"
+          if [[ "${{ steps.config.outputs.format }}" == "cyclonedx" ]]; then
+            echo "Components: $(jq '.components | length' sbom.json)"
+          elif [[ "${{ steps.config.outputs.format }}" == "spdx" ]]; then
+            echo "Packages: $(jq '.packages | length' sbom.json)"
           fi
 
       - name: Upload SBOM artifact
