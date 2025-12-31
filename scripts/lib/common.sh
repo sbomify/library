@@ -144,23 +144,23 @@ validate_semver() {
 # Read the LATEST version for an app
 get_latest_version() {
     local app="$1"
-    local latest_file="${APPS_DIR}/${app}/LATEST"
+    local config_file="${APPS_DIR}/${app}/config.yaml"
     
-    if [[ ! -f "$latest_file" ]]; then
-        die "LATEST file not found: $latest_file"
+    if [[ ! -f "$config_file" ]]; then
+        die "Config file not found: $config_file"
     fi
     
-    # Read and trim whitespace
+    # Read version from config.yaml
     local version
-    version="$(tr -d '[:space:]' < "$latest_file")"
+    version="$(yq -r '.version // ""' "$config_file" | tr -d '[:space:]')"
     
     if [[ -z "$version" ]]; then
-        die "LATEST file is empty: $latest_file"
+        die "Version not specified in: $config_file"
     fi
     
     # Validate semver format
     if ! validate_semver "$version"; then
-        die "Invalid version '$version' in $latest_file. Must be valid semver (e.g., 1.2.3, 1.2.3-rc1, 1.2.3+build)"
+        die "Invalid version '$version' in $config_file. Must be valid semver (e.g., 1.2.3, 1.2.3-rc1, 1.2.3+build)"
     fi
     
     echo "$version"

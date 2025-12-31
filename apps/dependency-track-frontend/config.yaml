@@ -7,6 +7,7 @@
 # https://github.com/DependencyTrack/frontend
 
 name: dependency-track-frontend
+version: "4.13.6"
 
 # Dependency Track publishes CycloneDX SBOMs
 format: cyclonedx

@@ -1,13 +1,12 @@
 # Template for per-app SBOM workflow
 #
 # To create a workflow for a new app:
-# 1. Copy this file: cp _template.yml <app-name>.yml
+# 1. Copy this file: cp _sbom-template.yml sbom-<app-name>.yml
 # 2. Replace all occurrences of 'example-app' with your app name
 # 3. Commit and push
 #
 # The workflow will trigger when:
-# - The LATEST file is updated (version bump)
-# - The config.yaml is modified
+# - The config.yaml is modified (including version bumps)
 # - The workflow file itself is modified
 
 name: "SBOM: example-app"
@@ -17,9 +16,8 @@ on:
     branches:
       - master
     paths:
-      - 'apps/example-app/LATEST'
       - 'apps/example-app/config.yaml'
-      - '.github/workflows/apps/example-app.yml'
+      - '.github/workflows/sbom-example-app.yml'
 
   # Allow manual triggering
   workflow_dispatch:

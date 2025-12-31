@@ -1,20 +1,19 @@
-# SBOM workflow for Dependency Track
+# SBOM workflow for Dependency Track Frontend
 #
-# Triggers when dependency-track version or config is updated.
+# Triggers when dependency-track-frontend version or config is updated.
 # Downloads SBOM from GitHub releases.
 #
-# https://github.com/DependencyTrack/dependency-track
+# https://github.com/DependencyTrack/frontend
 
-name: "SBOM: dependency-track"
+name: "SBOM: dependency-track-frontend"
 
 on:
   push:
     branches:
       - master
     paths:
-      - 'apps/dependency-track/LATEST'
-      - 'apps/dependency-track/config.yaml'
-      - '.github/workflows/apps/dependency-track.yml'
+      - 'apps/dependency-track-frontend/config.yaml'
+      - '.github/workflows/sbom-dependency-track-frontend.yml'
 
   workflow_dispatch:
     inputs:
@@ -28,7 +27,7 @@ jobs:
   build:
     uses: ./.github/workflows/sbom-builder.yml
     with:
-      app: dependency-track
+      app: dependency-track-frontend
       dry_run: ${{ github.event.inputs.dry_run == 'true' }}
     secrets: inherit
 
