@@ -1,7 +1,7 @@
-# Dependency Track SBOM Configuration
+# Dependency Track API Server SBOM Configuration
 #
-# Dependency-Track is an intelligent component analysis platform that allows
-# organizations to identify and reduce risk in the software supply chain.
+# The API server component for Dependency-Track, an intelligent component
+# analysis platform for software supply chain risk management.
 #
 # SBOM source: GitHub releases (bom.json artifact)
 # https://github.com/DependencyTrack/dependency-track
@@ -18,5 +18,5 @@ source:
 
 sbomify:
   component_id: "hZSsrKGgp1ZP"
-  component_name: "Dependency Track Bundle"
+  component_name: "Dependency Track API Server"
 
