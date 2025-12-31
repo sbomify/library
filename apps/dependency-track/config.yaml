@@ -14,9 +14,7 @@ format: cyclonedx
 source:
   type: github_release
   repo: "DependencyTrack/dependency-track"
-  asset_pattern: "bom.json"
-  # Tags don't have a 'v' prefix (e.g., 4.13.6 not v4.13.6)
-  tag_prefix: ""
+  asset: "bom.json"
 
 sbomify:
   component_id: "hZSsrKGgp1ZP"

@@ -167,32 +167,40 @@ get_latest_version() {
 }
 
 # Get a value from app config.yaml
+# Usage: get_config <app> <path> [default]
+# If default is provided (even empty string), it's used when value is missing
 get_config() {
     local app="$1"
     local path="$2"
-    local default="${3:-}"
-    
+    local has_default=false
+    local default=""
+
+    if [[ $# -ge 3 ]]; then
+        has_default=true
+        default="$3"
+    fi
+
     local config_file="${APPS_DIR}/${app}/config.yaml"
-    
+
     if [[ ! -f "$config_file" ]]; then
-        if [[ -n "$default" ]]; then
+        if [[ "$has_default" == "true" ]]; then
             echo "$default"
             return
         fi
         die "Config file not found: $config_file"
     fi
-    
+
     local value
     value="$(yq -r "$path // \"\"" "$config_file")"
-    
+
     if [[ -z "$value" || "$value" == "null" ]]; then
-        if [[ -n "$default" ]]; then
+        if [[ "$has_default" == "true" ]]; then
             echo "$default"
             return
         fi
         die "Config value not found: $path in $config_file"
     fi
-    
+
     echo "$value"
 }
 
@@ -223,11 +231,13 @@ _SBOM_TEMP_DIRS=()
 
 # Cleanup function for temp directories
 _cleanup_temp_dirs() {
-    for dir in "${_SBOM_TEMP_DIRS[@]}"; do
-        if [[ -d "$dir" ]]; then
-            rm -rf "$dir"
-        fi
-    done
+    if [[ ${#_SBOM_TEMP_DIRS[@]} -gt 0 ]]; then
+        for dir in "${_SBOM_TEMP_DIRS[@]}"; do
+            if [[ -d "$dir" ]]; then
+                rm -rf "$dir"
+            fi
+        done
+    fi
 }
 
 # Register cleanup on exit (only once)

@@ -157,9 +157,9 @@ Download SBOMs from GitHub release assets:
 source:
   type: github_release
   repo: "owner/repo"              # GitHub repository (required)
-  asset_pattern: "*.sbom.json"    # Glob pattern for asset
-  tag_prefix: "v"                 # Tag prefix (e.g., "v" for "v1.0.0")
-  tag_suffix: ""                  # Tag suffix if any
+  asset: "bom.json"               # Asset filename (required)
+  tag_prefix: "v"                 # Tag prefix (default: "")
+  tag_suffix: ""                  # Tag suffix (default: "")
 ```
 
 #### Lockfile Generation

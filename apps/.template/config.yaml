@@ -33,9 +33,9 @@ source:
   # GitHub release options (type: github_release)
   # ============================================
   # repo: "owner/repo"               # GitHub repository (required)
-  # asset_pattern: "*.sbom.json"     # Glob pattern for SBOM asset
-  # tag_prefix: "v"                  # Version tag prefix (e.g., "v" for "v1.0.0")
-  # tag_suffix: ""                   # Version tag suffix if any
+  # asset: "bom.json"                # Asset filename (required)
+  # tag_prefix: "v"                  # Version tag prefix (default: "")
+  # tag_suffix: ""                   # Version tag suffix (default: "")
 
   # ============================================
   # Lockfile options (type: lockfile)
