@@ -1,0 +1,59 @@
+# CI - Validate SBOM fetching on pull requests
+#
+# Runs the SBOM builder in dry-run mode to validate configuration
+# and fetching works without uploading to sbomify.
+
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'scripts/**'
+      - '.github/workflows/sbom-builder.yml'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  # Find which apps have changed
+  detect-changes:
+    name: Detect changed apps
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.detect.outputs.apps }}
+      has_apps: ${{ steps.detect.outputs.has_apps }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect changed apps
+        id: detect
+        run: |
+          # Get list of app directories (excluding .template)
+          apps=$(find apps -mindepth 1 -maxdepth 1 -type d \
+            -not -name ".template" \
+            -exec basename {} \; | sort | jq -R -s -c 'split("\n") | map(select(. != ""))')
+
+          echo "Found apps: $apps"
+          echo "apps=${apps}" >> $GITHUB_OUTPUT
+
+          # Check if we have any apps
+          if [[ "$apps" == "[]" ]]; then
+            echo "has_apps=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_apps=true" >> $GITHUB_OUTPUT
+          fi
+
+  # Validate each app in dry-run mode
+  validate:
+    name: Validate ${{ matrix.app }}
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_apps == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.detect-changes.outputs.apps) }}
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: ${{ matrix.app }}
+      dry_run: true
+      validate: true
