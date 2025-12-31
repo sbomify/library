@@ -56,4 +56,3 @@ jobs:
     with:
       app: ${{ matrix.app }}
       dry_run: true
-      validate: true
