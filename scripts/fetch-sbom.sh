@@ -65,9 +65,10 @@ EOF
 route_to_handler() {
     local app="$1"
     local source_type="$2"
-    
+    local output_file="$3"
+
     local handler_script=""
-    
+
     case "$source_type" in
         docker)
             handler_script="${SOURCES_DIR}/docker-attestation.sh"
@@ -85,16 +86,16 @@ route_to_handler() {
             die "Unknown source type: $source_type"
             ;;
     esac
-    
+
     if [[ ! -f "$handler_script" ]]; then
         die "Handler script not found: $handler_script"
     fi
-    
+
     if [[ ! -x "$handler_script" ]]; then
         log_warn "Handler script not executable, using bash to run it"
-        bash "$handler_script" "$app"
+        bash "$handler_script" "$app" "$output_file"
     else
-        "$handler_script" "$app"
+        "$handler_script" "$app" "$output_file"
     fi
 }
 
@@ -221,28 +222,28 @@ main() {
     log_info "Source:  $source_type"
     log_info "========================================"
     
-    # Fetch SBOM
-    local sbom
-    sbom=$(route_to_handler "$app" "$source_type")
-    
+    # Determine output file
+    local sbom_file
+    if [[ -n "$output_file" ]]; then
+        sbom_file="$output_file"
+    else
+        sbom_file="$(create_temp_dir)/sbom.json"
+    fi
+
+    # Fetch SBOM directly to file
+    route_to_handler "$app" "$source_type" "$sbom_file"
+
     # Validate if requested
     if [[ "$do_validate" == "true" ]]; then
         local format
         format=$(get_sbom_format "$app")
-        validate_sbom "$sbom" "$format"
+        validate_sbom "$(cat "$sbom_file")" "$format"
         log_info "SBOM validation passed"
     fi
-    
-    # Output
-    if [[ -n "$output_file" ]]; then
-        if is_dry_run; then
-            log_info "[DRY RUN] Would write SBOM to: $output_file"
-        else
-            echo "$sbom" > "$output_file"
-            log_info "SBOM written to: $output_file"
-        fi
-    else
-        echo "$sbom"
+
+    # Output to stdout if no output file was specified
+    if [[ -z "$output_file" ]]; then
+        cat "$sbom_file"
     fi
     
     log_info "Done!"

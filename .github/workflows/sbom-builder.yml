@@ -180,7 +180,7 @@ jobs:
           retention-days: 90
 
       - name: Upload to sbomify
-        if: ${{ !inputs.dry_run && steps.config.outputs.component_id != '' }}
+        if: ${{ steps.config.outputs.component_id != '' }}
         uses: sbomify/github-action@master
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
@@ -190,6 +190,7 @@ jobs:
           SBOM_FILE: ${{ steps.fetch.outputs.sbom_file }}
           AUGMENT: true
           ENRICH: true
+          UPLOAD: ${{ !inputs.dry_run }}
           # Tag with product release if product_id is configured
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
 

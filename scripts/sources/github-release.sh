@@ -3,7 +3,7 @@
 #
 # This script downloads SBOM files from GitHub releases using curl.
 #
-# Usage: ./github-release.sh <app-name>
+# Usage: ./github-release.sh <app-name> <output-file>
 
 set -euo pipefail
 
@@ -42,6 +42,7 @@ get_tag_name() {
 download_sbom() {
     local app="$1"
     local version="$2"
+    local output_file="$3"
 
     local repo asset tag
     repo=$(get_config "$app" ".source.repo")
@@ -53,19 +54,11 @@ download_sbom() {
     log_info "Downloading SBOM from GitHub release"
     log_info "  URL: $url"
 
-    if is_dry_run; then
-        log_info "[DRY RUN] Would download: $url"
-        # Return a valid placeholder SBOM for dry-run validation
-        echo '{"bomFormat":"CycloneDX","specVersion":"1.4","version":1,"components":[]}'
-        return 0
-    fi
-
-    local sbom
-    sbom=$(curl -fsSL "$url") || {
+    curl -fsSL -o "$output_file" "$url" || {
         die "Failed to download SBOM from $url"
     }
 
-    echo "$sbom"
+    log_info "Downloaded to: $output_file"
 }
 
 # =============================================================================
@@ -79,12 +72,13 @@ main() {
     fi
     set -- "${REMAINING_ARGS[@]}"
 
-    if [[ $# -lt 1 ]]; then
+    if [[ $# -lt 2 ]]; then
         show_help
         exit 1
     fi
 
     local app="$1"
+    local output_file="$2"
 
     # Validate
     check_required_tools
@@ -101,17 +95,8 @@ main() {
 
     log_info "Processing app: $app, version: $version"
 
-    # Download and output
-    local sbom
-    sbom=$(download_sbom "$app" "$version")
-
-    # Validate the output
-    local format
-    format=$(get_sbom_format "$app")
-    validate_sbom "$sbom" "$format"
-
-    # Output to stdout
-    echo "$sbom"
+    # Download directly to output file
+    download_sbom "$app" "$version" "$output_file"
 }
 
 # Run main if script is executed directly
