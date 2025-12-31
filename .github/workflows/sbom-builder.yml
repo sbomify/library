@@ -1,0 +1,91 @@
+# Reusable workflow for SBOM extraction and upload
+name: SBOM Builder
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        description: 'App name (folder name under apps/)'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run (no upload to sbomify)'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      SBOMIFY_TOKEN:
+        required: false
+
+env:
+  YQ_VERSION: "v4.40.5"
+  CRANE_VERSION: "v0.17.0"
+
+jobs:
+  build:
+    name: ${{ inputs.app }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          # yq
+          sudo curl -fsSL -o /usr/local/bin/yq \
+            "https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
+
+          # crane
+          CRANE_URL="https://github.com/google/go-containerregistry/releases/download"
+          curl -fsSL "${CRANE_URL}/${{ env.CRANE_VERSION }}/go-containerregistry_Linux_x86_64.tar.gz" \
+            | tar -xzf -
+          sudo mv crane /usr/local/bin/
+
+          # Source-specific tools
+          SOURCE=$(yq -r '.source.type' "apps/${{ inputs.app }}/config.yaml")
+          case "$SOURCE" in
+            lockfile) npm install -g @cyclonedx/cdxgen ;;
+            chainguard)
+              curl -sLO "https://github.com/sigstore/cosign/releases/download/v2.2.2/cosign-linux-amd64"
+              sudo install cosign-linux-amd64 /usr/local/bin/cosign
+              ;;
+          esac
+
+      - name: Read config
+        id: config
+        run: |
+          APP_DIR="apps/${{ inputs.app }}"
+          echo "version=$(tr -d '[:space:]' < ${APP_DIR}/LATEST)" >> $GITHUB_OUTPUT
+          echo "component_id=$(yq -r '.sbomify.component_id // ""' ${APP_DIR}/config.yaml)" >> $GITHUB_OUTPUT
+          echo "component_name=$(yq -r '.sbomify.component_name // ""' ${APP_DIR}/config.yaml)" >> $GITHUB_OUTPUT
+          PRODUCT_ID=$(yq -r '.sbomify.product_id // ""' ${APP_DIR}/config.yaml)
+          if [[ -n "$PRODUCT_ID" ]]; then
+            VERSION=$(tr -d '[:space:]' < ${APP_DIR}/LATEST)
+            echo "product_release=[\"${PRODUCT_ID}:${VERSION}\"]" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch SBOM
+        run: |
+          chmod +x scripts/*.sh scripts/**/*.sh
+          ./scripts/fetch-sbom.sh "${{ inputs.app }}"
+          ls -la sbom.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          path: sbom.json
+
+      - name: Upload to sbomify
+        if: steps.config.outputs.component_id != ''
+        uses: sbomify/github-action@master
+        env:
+          TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
+          COMPONENT_ID: ${{ steps.config.outputs.component_id }}
+          COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
+          COMPONENT_VERSION: ${{ steps.config.outputs.version }}
+          SBOM_FILE: sbom.json
+          AUGMENT: true
+          ENRICH: true
+          UPLOAD: ${{ !inputs.dry_run }}
+          PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}

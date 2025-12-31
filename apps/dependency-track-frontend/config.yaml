@@ -1,0 +1,22 @@
+# Dependency Track Frontend SBOM Configuration
+#
+# The frontend component for Dependency-Track, an intelligent component
+# analysis platform for software supply chain risk management.
+#
+# SBOM source: GitHub releases (bom.json artifact)
+# https://github.com/DependencyTrack/frontend
+
+name: dependency-track-frontend
+
+# Dependency Track publishes CycloneDX SBOMs
+format: cyclonedx
+
+source:
+  type: github_release
+  repo: "DependencyTrack/frontend"
+  asset: "bom.json"
+
+sbomify:
+  component_id: "UL9G0VKuqRiI"
+  component_name: "Dependency Track Frontend"
+

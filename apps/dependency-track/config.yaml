@@ -1,0 +1,22 @@
+# Dependency Track API Server SBOM Configuration
+#
+# The API server component for Dependency-Track, an intelligent component
+# analysis platform for software supply chain risk management.
+#
+# SBOM source: GitHub releases (bom.json artifact)
+# https://github.com/DependencyTrack/dependency-track
+
+name: dependency-track
+
+# Dependency Track publishes CycloneDX SBOMs
+format: cyclonedx
+
+source:
+  type: github_release
+  repo: "DependencyTrack/dependency-track"
+  asset: "bom.json"
+
+sbomify:
+  component_id: "hZSsrKGgp1ZP"
+  component_name: "Dependency Track API Server"
+
