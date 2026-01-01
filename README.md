@@ -11,9 +11,16 @@ This repository manages SBOM extraction from multiple sources:
 - **GitHub Releases** - Download SBOMs published as release assets
 - **Lockfile Generation** - Generate SBOMs from project dependency lockfiles
 
-Each app has its own folder with version tracking. When you bump the version in the `LATEST` file, only that app's SBOM is rebuilt and uploaded - not the entire repository.
+Each app has its own folder with version tracking. When you bump the `version` in `config.yaml`, only that app's SBOM is rebuilt and uploaded - not the entire repository.
 
 **Note:** Each version only needs to be processed once. Once an SBOM is uploaded to sbomify, it is permanently stored there. There is no need to re-process the same version.
+
+## Projects
+
+| Project | Component | Source | Job | sbomify |
+|---------|-----------|--------|-----|---------|
+| [Dependency Track](https://github.com/DependencyTrack/dependency-track) | API Server | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml) | [View](https://library.sbomify.com/product/dependency-track/) |
+| [Dependency Track](https://github.com/DependencyTrack/frontend) | Frontend | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml) | [View](https://library.sbomify.com/product/dependency-track/) |
 
 ## Directory Structure
 
@@ -21,25 +28,20 @@ Each app has its own folder with version tracking. When you bump the version in 
 .
 ├── .github/
 │   └── workflows/
-│       ├── sbom-builder.yml      # Reusable workflow (main logic)
-│       └── apps/
-│           ├── _template.yml     # Template for new app workflows
-│           └── nginx.yml         # Per-app workflow example
+│       ├── sbom-builder.yml          # Reusable workflow (main logic)
+│       ├── _sbom-template.yml        # Template for new app workflows
+│       └── sbom-<app-name>.yml       # Per-app workflow
 ├── apps/
-│   ├── .template/                # Template for new apps
-│   │   ├── config.yaml
-│   │   └── LATEST
-│   └── nginx/                    # Example app
-│       ├── config.yaml           # App configuration
-│       └── LATEST                # Current version in semver (e.g., "1.25.4")
+│   └── <app-name>/                   # Example app
+│       └── config.yaml               # App configuration (includes version)
 ├── scripts/
-│   ├── fetch-sbom.sh             # Main entry point
+│   ├── fetch-sbom.sh                 # Main entry point
 │   ├── lib/
-│   │   └── common.sh             # Shared utilities
+│   │   └── common.sh                 # Shared utilities
 │   └── sources/
-│       ├── docker-attestation.sh # Docker extraction
-│       ├── github-release.sh     # GitHub release download
-│       └── lockfile-generator.sh # Lockfile-based generation
+│       ├── docker-attestation.sh     # Docker extraction
+│       ├── github-release.sh         # GitHub release download
+│       └── lockfile-generator.sh     # Lockfile-based generation
 └── README.md
 ```
 
@@ -49,50 +51,53 @@ Each app has its own folder with version tracking. When you bump the version in 
 
 1. **Create the app folder:**
    ```bash
-   cp -r apps/.template apps/myapp
+   mkdir -p apps/myapp
    ```
 
-2. **Edit `apps/myapp/config.yaml`:**
+2. **Create `apps/myapp/config.yaml`:**
    ```yaml
    name: myapp
+   version: "1.0.0"  # Must be valid semver
    format: cyclonedx  # or spdx
    
    source:
-     type: docker  # or github_release, lockfile
+     type: docker  # or github_release, lockfile, chainguard
      image: "library/myapp"
      registry: "docker.io"
    
    sbomify:
      component_id: "your-component-id"
-   ```
-
-3. **Set the version in `apps/myapp/LATEST`** (must be valid semver):
-   ```
-   1.0.0
+     component_name: "My App"
    ```
    
-   Valid formats: `1.2.3`, `1.2.3-rc1`, `1.2.3-alpha.1+build`. **Note:** `latest` is not allowed.
+   Valid version formats: `1.2.3`, `1.2.3-rc1`, `1.2.3-alpha.1+build`. **Note:** `latest` is not allowed.
 
-4. **Create the workflow file:**
+3. **Create the workflow file:**
    ```bash
-   cp .github/workflows/apps/_template.yml .github/workflows/apps/myapp.yml
+   cp .github/workflows/_sbom-template.yml .github/workflows/sbom-myapp.yml
    # Edit the file and replace 'example-app' with 'myapp'
    ```
 
-5. **Commit and push:**
+4. **Commit and push:**
    ```bash
-   git add apps/myapp .github/workflows/apps/myapp.yml
+   git add apps/myapp .github/workflows/sbom-myapp.yml
    git commit -m "Add myapp SBOM"
    git push
    ```
 
 ### Bumping a Version
 
-Simply update the `LATEST` file:
+Simply update the `version` field in `config.yaml`:
+
+```yaml
+# apps/nginx/config.yaml
+name: nginx
+version: "1.26.0"  # Update this line
+...
+```
 
 ```bash
-echo "1.26.0" > apps/nginx/LATEST
-git add apps/nginx/LATEST
+git add apps/nginx/config.yaml
 git commit -m "Bump nginx to 1.26.0"
 git push
 ```
@@ -107,18 +112,22 @@ The GitHub Action will automatically rebuild and upload only the nginx SBOM.
 # Required: App name (should match folder name)
 name: nginx
 
+# Required: Version (must be valid semver)
+version: "1.25.4"
+
 # Required: SBOM format
 format: cyclonedx  # cyclonedx | spdx
 
 # Required: Source configuration
 source:
-  type: docker  # docker | github_release | lockfile
+  type: docker  # docker | github_release | lockfile | chainguard
   
   # ... source-specific options (see below)
 
 # Required for upload: sbomify configuration  
 sbomify:
   component_id: "abc123-def456"
+  component_name: "Nginx"
 ```
 
 ### Source Types
@@ -200,9 +209,6 @@ For lockfile generation:
 ### Running Locally
 
 ```bash
-# Make scripts executable
-chmod +x scripts/*.sh scripts/**/*.sh
-
 # List available apps
 ./scripts/fetch-sbom.sh --list
 
@@ -247,11 +253,12 @@ Each app workflow can be manually triggered from the Actions tab with optional d
 
 ### Workflow Structure
 
-- **Per-app workflows** (`apps/<name>.yml`) - Thin wrappers that trigger on path changes
+- **Per-app workflows** (`sbom-<app-name>.yml`) - Thin wrappers that trigger on config.yaml changes
 - **Reusable workflow** (`sbom-builder.yml`) - Contains all the build logic
+- **Template** (`_sbom-template.yml`) - Copy this to create new app workflows
 
 This design ensures:
-1. Only the changed app is rebuilt (via path filters)
+1. Only the changed app is rebuilt (via path filters on config.yaml)
 2. Build logic is centralized and maintainable
 3. New apps just need a simple workflow file
 

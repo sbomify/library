@@ -55,18 +55,18 @@ jobs:
         id: config
         run: |
           APP_DIR="apps/${{ inputs.app }}"
-          echo "version=$(tr -d '[:space:]' < ${APP_DIR}/LATEST)" >> $GITHUB_OUTPUT
-          echo "component_id=$(yq -r '.sbomify.component_id // ""' ${APP_DIR}/config.yaml)" >> $GITHUB_OUTPUT
-          echo "component_name=$(yq -r '.sbomify.component_name // ""' ${APP_DIR}/config.yaml)" >> $GITHUB_OUTPUT
-          PRODUCT_ID=$(yq -r '.sbomify.product_id // ""' ${APP_DIR}/config.yaml)
-          if [[ -n "$PRODUCT_ID" ]]; then
-            VERSION=$(tr -d '[:space:]' < ${APP_DIR}/LATEST)
+          CONFIG="${APP_DIR}/config.yaml"
+          VERSION=$(yq -r '.version // ""' "$CONFIG" | tr -d '[:space:]')
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "component_id=$(yq -r '.sbomify.component_id // ""' "$CONFIG")" >> $GITHUB_OUTPUT
+          echo "component_name=$(yq -r '.sbomify.component_name // ""' "$CONFIG")" >> $GITHUB_OUTPUT
+          PRODUCT_ID=$(yq -r '.sbomify.product_id // ""' "$CONFIG")
+          if [[ -n "$PRODUCT_ID" && -n "$VERSION" ]]; then
             echo "product_release=[\"${PRODUCT_ID}:${VERSION}\"]" >> $GITHUB_OUTPUT
           fi
 
       - name: Fetch SBOM
         run: |
-          chmod +x scripts/*.sh scripts/**/*.sh
           ./scripts/fetch-sbom.sh "${{ inputs.app }}"
           ls -la sbom.json
 
