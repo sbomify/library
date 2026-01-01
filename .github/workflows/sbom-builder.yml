@@ -67,7 +67,6 @@ jobs:
 
       - name: Fetch SBOM
         run: |
-          chmod +x scripts/*.sh scripts/**/*.sh
           ./scripts/fetch-sbom.sh "${{ inputs.app }}"
           ls -la sbom.json
 

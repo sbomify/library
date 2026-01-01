@@ -110,10 +110,6 @@ validate_app_dir() {
         die "App directory not found: $app_dir"
     fi
     
-    if [[ ! -f "${app_dir}/LATEST" ]]; then
-        die "LATEST file not found in: $app_dir"
-    fi
-    
     if [[ ! -f "${app_dir}/config.yaml" ]]; then
         die "config.yaml not found in: $app_dir"
     fi
@@ -141,7 +137,7 @@ validate_semver() {
     return 0
 }
 
-# Read the LATEST version for an app
+# Read the version from an app's config.yaml
 get_latest_version() {
     local app="$1"
     local config_file="${APPS_DIR}/${app}/config.yaml"
