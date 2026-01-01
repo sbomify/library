@@ -146,6 +146,11 @@ get_latest_version() {
         die "Config file not found: $config_file"
     fi
     
+    # Ensure yq is available before attempting to read the config
+    if ! command -v yq >/dev/null 2>&1; then
+        die "'yq' command not found. It is required to read: $config_file. Please install 'yq' and try again."
+    fi
+    
     # Read version from config.yaml
     local version
     version="$(yq -r '.version // ""' "$config_file" | tr -d '[:space:]')"

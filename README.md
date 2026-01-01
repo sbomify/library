@@ -15,6 +15,13 @@ Each app has its own folder with version tracking. When you bump the `version` i
 
 **Note:** Each version only needs to be processed once. Once an SBOM is uploaded to sbomify, it is permanently stored there. There is no need to re-process the same version.
 
+## Projects
+
+| Project | Component | Source | sbomify |
+|---------|-----------|--------|---------|
+| [Dependency Track](https://github.com/DependencyTrack/dependency-track) | API Server | GitHub Release | [View](https://library.sbomify.com/product/dependency-track/) |
+| [Dependency Track](https://github.com/DependencyTrack/frontend) | Frontend | GitHub Release | [View](https://library.sbomify.com/product/dependency-track/) |
+
 ## Directory Structure
 
 ```
