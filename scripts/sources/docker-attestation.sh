@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # docker-attestation.sh - Extract SBOM from Docker image OCI attestation
+# shellcheck source-path=SCRIPTDIR
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

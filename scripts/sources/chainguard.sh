@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # chainguard.sh - Download SBOM from Chainguard image via cosign
+# shellcheck source-path=SCRIPTDIR
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -9,7 +9,7 @@ This repository manages SBOM extraction from multiple sources:
 - **Docker OCI Attestations** - Extract SBOMs embedded in Docker images via BuildKit attestations
 - **Chainguard Images** - Download signed SBOM attestations from Chainguard images via cosign
 - **GitHub Releases** - Download SBOMs published as release assets
-- **Lockfile Generation** - Generate SBOMs from project dependency lockfiles
+- **Lockfile Sources** - Download lockfiles for SBOM generation by sbomify
 
 Each app has its own folder with version tracking. When you bump the `version` in `config.yaml`, only that app's SBOM is rebuilt and uploaded - not the entire repository.
 
@@ -22,6 +22,7 @@ Each app has its own folder with version tracking. When you bump the `version` i
 | [Caddy](https://github.com/caddyserver/caddy) | Caddy | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-caddy.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-caddy.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/caddy/) |
 | [Dependency Track](https://github.com/DependencyTrack/dependency-track) | API Server | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/dependency-track/) |
 | [Dependency Track](https://github.com/DependencyTrack/frontend) | Frontend | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/dependency-track/) |
+| [Keycloak](https://github.com/keycloak/keycloak) | Keycloak | Lockfile | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-keycloak.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-keycloak.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/keycloak/) |
 | [OSV Scanner](https://github.com/google/osv-scanner) | OSV Scanner | Lockfile | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/osv-scanner/) |
 
 ## Directory Structure
@@ -43,7 +44,7 @@ Each app has its own folder with version tracking. When you bump the `version` i
 │   └── sources/
 │       ├── docker-attestation.sh     # Docker extraction
 │       ├── github-release.sh         # GitHub release download
-│       └── lockfile-generator.sh     # Lockfile-based generation
+│       └── lockfile-generator.sh     # Lockfile download
 └── README.md
 ```
 
@@ -183,9 +184,9 @@ source:
   tag_prefix: "v"
 ```
 
-#### Lockfile Generation
+#### Lockfile Sources
 
-Generate SBOMs from project lockfiles:
+Download lockfiles for SBOM generation by the sbomify GitHub Action:
 
 ```yaml
 source:
@@ -193,10 +194,9 @@ source:
   repo: "owner/repo"              # GitHub repository (required)
   lockfile: "package-lock.json"   # Path to lockfile (required)
   tag_prefix: "v"                 # Tag prefix
-  generator: "auto"               # cdxgen | syft | auto
-  extra_files:                    # Additional files to download
-    - "package.json"
 ```
+
+Note: SBOM generation from lockfiles is handled automatically by the sbomify GitHub Action.
 
 ## Local Development
 
@@ -214,9 +214,8 @@ For Docker sources:
 For Chainguard sources:
 - **cosign** (from sigstore)
 
-For lockfile generation:
-- **cdxgen** (`npm install -g @cyclonedx/cdxgen`), or
-- **syft**
+For lockfile sources:
+- No additional tools required (SBOM generation handled by sbomify GitHub Action)
 
 ### Running Locally
 

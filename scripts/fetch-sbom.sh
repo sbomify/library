@@ -2,6 +2,7 @@
 # fetch-sbom.sh - Fetch SBOM for an app
 #
 # Usage: ./fetch-sbom.sh <app-name>
+# shellcheck source-path=SCRIPTDIR
 
 set -euo pipefail
 
@@ -37,7 +38,19 @@ main() {
     fi
 
     "$handler" "$app"
-    log_info "Done: sbom.json"
+
+    # Log appropriate output based on source type
+    case "$source_type" in
+        lockfile)
+            local lockfile_path lockfile
+            lockfile_path=$(get_config "$app" ".source.lockfile")
+            lockfile=$(basename "$lockfile_path")
+            log_info "Done: $lockfile"
+            ;;
+        *)
+            log_info "Done: sbom.json"
+            ;;
+    esac
 }
 
 main "$@"

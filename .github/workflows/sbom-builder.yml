@@ -48,7 +48,6 @@ jobs:
           # Source-specific tools
           SOURCE=$(yq -r '.source.type' "apps/${{ inputs.app }}/config.yaml")
           case "$SOURCE" in
-            lockfile) npm install -g @cyclonedx/cdxgen ;;
             chainguard)
               curl -sLO "https://github.com/sigstore/cosign/releases/download/v2.2.2/cosign-linux-amd64"
               sudo install cosign-linux-amd64 /usr/local/bin/cosign
@@ -64,25 +63,43 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "component_id=$(yq -r '.sbomify.component_id // ""' "$CONFIG")" >> $GITHUB_OUTPUT
           echo "component_name=$(yq -r '.sbomify.component_name // ""' "$CONFIG")" >> $GITHUB_OUTPUT
+          echo "source_type=$(yq -r '.source.type // ""' "$CONFIG")" >> $GITHUB_OUTPUT
+          LOCKFILE_PATH=$(yq -r '.source.lockfile // ""' "$CONFIG")
+          if [[ -n "$LOCKFILE_PATH" ]]; then
+            echo "lockfile=$(basename "$LOCKFILE_PATH")" >> $GITHUB_OUTPUT
+          else
+            echo "lockfile=" >> $GITHUB_OUTPUT
+          fi
           PRODUCT_ID=$(yq -r '.sbomify.product_id // ""' "$CONFIG")
           if [[ -n "$PRODUCT_ID" && -n "$VERSION" ]]; then
             echo "product_release=[\"${PRODUCT_ID}:${VERSION}\"]" >> $GITHUB_OUTPUT
           fi
 
-      - name: Fetch SBOM
+      - name: Fetch SBOM or lockfile
         run: |
           ./scripts/fetch-sbom.sh "${{ inputs.app }}"
-          ls -la sbom.json
+          if [[ "${{ steps.config.outputs.source_type }}" == "lockfile" ]]; then
+            ls -la "${{ steps.config.outputs.lockfile }}"
+          else
+            ls -la sbom.json
+          fi
 
       - name: Upload input artifact
-        if: always()
+        if: always() && steps.config.outputs.source_type != 'lockfile'
         uses: actions/upload-artifact@v4
         with:
           name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
           path: sbom.json
 
-      - name: Upload to sbomify
-        if: steps.config.outputs.component_id != ''
+      - name: Upload lockfile artifact
+        if: always() && steps.config.outputs.source_type == 'lockfile'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lockfile-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          path: ${{ steps.config.outputs.lockfile }}
+
+      - name: Upload to sbomify (SBOM)
+        if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
         uses: sbomify/github-action@master
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
@@ -90,6 +107,21 @@ jobs:
           COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
           COMPONENT_VERSION: ${{ steps.config.outputs.version }}
           SBOM_FILE: sbom.json
+          OUTPUT_FILE: sbom-output.json
+          AUGMENT: true
+          ENRICH: true
+          UPLOAD: ${{ !inputs.dry_run }}
+          PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+
+      - name: Upload to sbomify (lockfile)
+        if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
+        uses: sbomify/github-action@master
+        env:
+          TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
+          COMPONENT_ID: ${{ steps.config.outputs.component_id }}
+          COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
+          COMPONENT_VERSION: ${{ steps.config.outputs.version }}
+          LOCK_FILE: ${{ steps.config.outputs.lockfile }}
           OUTPUT_FILE: sbom-output.json
           AUGMENT: true
           ENRICH: true

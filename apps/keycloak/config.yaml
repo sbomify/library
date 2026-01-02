@@ -1,0 +1,24 @@
+# Keycloak SBOM Configuration
+#
+# Keycloak is an Open Source Identity and Access Management solution
+# for modern Applications and Services.
+#
+# SBOM source: Lockfile (pom.xml from GitHub)
+# https://github.com/keycloak/keycloak
+
+name: keycloak
+version: "26.4.7"
+
+format: cyclonedx
+
+source:
+  type: lockfile
+  repo: "keycloak/keycloak"
+  lockfile: "pom.xml"
+  tag_prefix: ""
+
+sbomify:
+  component_id: "GYsnuXarUapb"
+  component_name: "Keycloak"
+  product_id: "DYmPnVgOSdyT"
+
