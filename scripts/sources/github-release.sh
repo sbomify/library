@@ -13,6 +13,9 @@ tag_prefix=$(get_config "$app" ".source.tag_prefix" "")
 tag_suffix=$(get_config "$app" ".source.tag_suffix" "")
 tag="${tag_prefix}${version}${tag_suffix}"
 
+# Replace ${version} placeholder in asset name
+asset="${asset//\$\{version\}/$version}"
+
 url="https://github.com/${repo}/releases/download/${tag}/${asset}"
 log_info "Downloading: $url"
 curl -fsSL -o sbom.json "$url"
