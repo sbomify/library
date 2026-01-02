@@ -25,6 +25,10 @@ jobs:
   build:
     name: ${{ inputs.app }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write      # Required for OIDC token
+      contents: read       # Required to read repository
+      attestations: write  # Required to write attestations
     steps:
       - uses: actions/checkout@v4
 
@@ -70,12 +74,6 @@ jobs:
           ./scripts/fetch-sbom.sh "${{ inputs.app }}"
           ls -la sbom.json
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
-          path: sbom.json
-
       - name: Upload to sbomify
         if: steps.config.outputs.component_id != ''
         uses: sbomify/github-action@master
@@ -85,7 +83,28 @@ jobs:
           COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
           COMPONENT_VERSION: ${{ steps.config.outputs.version }}
           SBOM_FILE: sbom.json
+          OUTPUT_FILE: sbom-output.json
           AUGMENT: true
           ENRICH: true
           UPLOAD: ${{ !inputs.dry_run }}
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+
+      - name: Upload artifact (processed SBOM)
+        if: steps.config.outputs.component_id != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          path: sbom-output.json
+
+      - name: Upload artifact (raw SBOM)
+        if: steps.config.outputs.component_id == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          path: sbom.json
+
+      - name: Attest SBOM provenance
+        if: steps.config.outputs.component_id != '' && !inputs.dry_run
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: sbom-output.json

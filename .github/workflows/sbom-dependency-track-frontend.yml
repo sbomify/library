@@ -30,4 +30,8 @@ jobs:
       app: dependency-track-frontend
       dry_run: ${{ github.event.inputs.dry_run == 'true' }}
     secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
 
