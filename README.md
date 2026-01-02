@@ -19,9 +19,9 @@ Each app has its own folder with version tracking. When you bump the `version` i
 
 | Project | Component | Source | Job | sbomify |
 |---------|-----------|--------|-----|---------|
-| [Dependency Track](https://github.com/DependencyTrack/dependency-track) | API Server | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml) | [View](https://library.sbomify.com/product/dependency-track/) |
-| [Dependency Track](https://github.com/DependencyTrack/frontend) | Frontend | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml) | [View](https://library.sbomify.com/product/dependency-track/) |
-| [OSV Scanner](https://github.com/google/osv-scanner) | OSV Scanner | Lockfile | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml) | [View](https://library.sbomify.com/product/osv-scanner/) |
+| [Dependency Track](https://github.com/DependencyTrack/dependency-track) | API Server | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/dependency-track/) |
+| [Dependency Track](https://github.com/DependencyTrack/frontend) | Frontend | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/dependency-track/) |
+| [OSV Scanner](https://github.com/google/osv-scanner) | OSV Scanner | Lockfile | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/osv-scanner/) |
 
 ## Directory Structure
 
