@@ -1,0 +1,25 @@
+# Caddy Web Server SBOM Configuration
+#
+# Caddy is a powerful, extensible platform to serve your sites, services, and
+# apps, written in Go. It features automatic HTTPS, HTTP/3, and easy configuration.
+#
+# SBOM source: GitHub releases (per-architecture SBOM)
+# https://github.com/caddyserver/caddy
+
+name: caddy
+version: "2.10.1"
+
+# Caddy publishes CycloneDX SBOMs
+format: cyclonedx
+
+source:
+  type: github_release
+  repo: "caddyserver/caddy"
+  asset: "caddy_${version}_linux_amd64.sbom"
+  tag_prefix: "v"
+
+sbomify:
+  component_id: "RIOhcEBGtCxW"
+  component_name: "Caddy"
+  product_id: "qYfcffpkcfav"
+
