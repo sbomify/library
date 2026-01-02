@@ -70,7 +70,8 @@ jobs:
           ./scripts/fetch-sbom.sh "${{ inputs.app }}"
           ls -la sbom.json
 
-      - name: Upload artifact
+      - name: Upload input artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
@@ -89,3 +90,11 @@ jobs:
           ENRICH: true
           UPLOAD: ${{ !inputs.dry_run }}
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+          OUTPUT_FILE: sbom-output.json
+
+      - name: Upload output artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-output-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          path: sbom-output.json
