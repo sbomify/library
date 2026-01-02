@@ -194,6 +194,17 @@ source:
   repo: "owner/repo"              # GitHub repository (required)
   lockfile: "package-lock.json"   # Path to lockfile (required)
   tag_prefix: "v"                 # Tag prefix
+  clone: false                    # Shallow clone repo instead of downloading lockfile
+```
+
+For projects with complex dependency structures (e.g., Maven multi-module projects), set `clone: true` to perform a shallow clone of the entire repository:
+
+```yaml
+source:
+  type: lockfile
+  repo: "keycloak/keycloak"
+  lockfile: "pom.xml"
+  clone: true                     # Clone repo for full dependency resolution
 ```
 
 Note: SBOM generation from lockfiles is handled automatically by the sbomify GitHub Action.

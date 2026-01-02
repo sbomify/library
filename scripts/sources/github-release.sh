@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # github-release.sh - Download SBOM from GitHub release
 # shellcheck source-path=SCRIPTDIR
+# shellcheck source=../lib/common.sh
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 
 app="$1"

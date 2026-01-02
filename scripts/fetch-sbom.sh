@@ -3,12 +3,14 @@
 #
 # Usage: ./fetch-sbom.sh <app-name>
 # shellcheck source-path=SCRIPTDIR
+# shellcheck source=lib/common.sh
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCES_DIR="${SCRIPT_DIR}/sources"
 
+# shellcheck source=lib/common.sh
 source "${SCRIPT_DIR}/lib/common.sh"
 
 main() {
@@ -42,10 +44,16 @@ main() {
     # Log appropriate output based on source type
     case "$source_type" in
         lockfile)
-            local lockfile_path lockfile
-            lockfile_path=$(get_config "$app" ".source.lockfile")
-            lockfile=$(basename "$lockfile_path")
-            log_info "Done: $lockfile"
+            local clone
+            clone=$(get_config "$app" ".source.clone" "false")
+            if [[ "$clone" == "true" ]]; then
+                log_info "Done: repo/"
+            else
+                local lockfile_path lockfile
+                lockfile_path=$(get_config "$app" ".source.lockfile")
+                lockfile=$(basename "$lockfile_path")
+                log_info "Done: $lockfile"
+            fi
             ;;
         *)
             log_info "Done: sbom.json"

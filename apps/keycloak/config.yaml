@@ -16,6 +16,7 @@ source:
   repo: "keycloak/keycloak"
   lockfile: "pom.xml"
   tag_prefix: ""
+  clone: true
 
 sbomify:
   component_id: "GYsnuXarUapb"
