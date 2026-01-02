@@ -21,6 +21,7 @@ Each app has its own folder with version tracking. When you bump the `version` i
 |---------|-----------|--------|-----|---------|
 | [Dependency Track](https://github.com/DependencyTrack/dependency-track) | API Server | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml) | [View](https://library.sbomify.com/product/dependency-track/) |
 | [Dependency Track](https://github.com/DependencyTrack/frontend) | Frontend | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml) | [View](https://library.sbomify.com/product/dependency-track/) |
+| [OSV Scanner](https://github.com/google/osv-scanner) | OSV Scanner | Lockfile | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml) | [View](https://library.sbomify.com/product/osv-scanner/) |
 
 ## Directory Structure
 
@@ -59,17 +60,17 @@ Each app has its own folder with version tracking. When you bump the `version` i
    name: myapp
    version: "1.0.0"  # Must be valid semver
    format: cyclonedx  # or spdx
-   
+
    source:
      type: docker  # or github_release, lockfile, chainguard
      image: "library/myapp"
      registry: "docker.io"
-   
+
    sbomify:
      component_id: "your-component-id"
      component_name: "My App"
    ```
-   
+
    Valid version formats: `1.2.3`, `1.2.3-rc1`, `1.2.3-alpha.1+build`. **Note:** `latest` is not allowed.
 
 3. **Create the workflow file:**
@@ -121,10 +122,10 @@ format: cyclonedx  # cyclonedx | spdx
 # Required: Source configuration
 source:
   type: docker  # docker | github_release | lockfile | chainguard
-  
+
   # ... source-specific options (see below)
 
-# Required for upload: sbomify configuration  
+# Required for upload: sbomify configuration
 sbomify:
   component_id: "abc123-def456"
   component_name: "Nginx"

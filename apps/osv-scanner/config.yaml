@@ -1,0 +1,25 @@
+# OSV Scanner SBOM Configuration
+#
+# OSV-Scanner is a vulnerability scanner written in Go that uses the OSV
+# database to find known vulnerabilities in your project's dependencies.
+#
+# SBOM source: Lockfile (go.mod from GitHub release)
+# https://github.com/google/osv-scanner
+
+name: osv-scanner
+version: "2.3.1"
+
+# cdxgen generates CycloneDX SBOMs from the Go lockfile
+format: cyclonedx
+
+source:
+  type: lockfile
+  repo: "google/osv-scanner"
+  lockfile: "go.mod"
+  tag_prefix: "v"
+
+sbomify:
+  component_id: "SAmO79cNeK6V"
+  component_name: "OSV Scanner"
+  product_id: "BbFX2DwrjpP6"
+

@@ -1,0 +1,35 @@
+# OSV Scanner SBOM workflow
+#
+# Generates SBOM from the go.mod lockfile of Google's OSV Scanner
+
+name: "SBOM: osv-scanner"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/osv-scanner/config.yaml'
+      - '.github/workflows/sbom-osv-scanner.yml'
+
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: osv-scanner
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+
