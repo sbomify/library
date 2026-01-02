@@ -74,6 +74,13 @@ jobs:
           ./scripts/fetch-sbom.sh "${{ inputs.app }}"
           ls -la sbom.json
 
+      - name: Upload input artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          path: sbom.json
+
       - name: Upload to sbomify
         if: steps.config.outputs.component_id != ''
         uses: sbomify/github-action@master
@@ -89,19 +96,12 @@ jobs:
           UPLOAD: ${{ !inputs.dry_run }}
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
 
-      - name: Upload artifact (processed SBOM)
-        if: steps.config.outputs.component_id != ''
+      - name: Upload output artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          name: sbom-output-${{ inputs.app }}-${{ steps.config.outputs.version }}
           path: sbom-output.json
-
-      - name: Upload artifact (raw SBOM)
-        if: steps.config.outputs.component_id == ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
-          path: sbom.json
 
       - name: Attest SBOM provenance
         if: steps.config.outputs.component_id != '' && !inputs.dry_run
