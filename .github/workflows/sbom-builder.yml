@@ -25,6 +25,10 @@ jobs:
   build:
     name: ${{ inputs.app }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write      # Required for OIDC token
+      contents: read       # Required to read repository
+      attestations: write  # Required to write attestations
     steps:
       - uses: actions/checkout@v4
 
@@ -86,11 +90,11 @@ jobs:
           COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
           COMPONENT_VERSION: ${{ steps.config.outputs.version }}
           SBOM_FILE: sbom.json
+          OUTPUT_FILE: sbom-output.json
           AUGMENT: true
           ENRICH: true
           UPLOAD: ${{ !inputs.dry_run }}
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
-          OUTPUT_FILE: sbom-output.json
 
       - name: Upload output artifact
         if: always()
@@ -98,3 +102,9 @@ jobs:
         with:
           name: sbom-output-${{ inputs.app }}-${{ steps.config.outputs.version }}
           path: sbom-output.json
+
+      - name: Attest SBOM provenance
+        if: steps.config.outputs.component_id != '' && !inputs.dry_run
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: sbom-output.json
