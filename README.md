@@ -19,6 +19,7 @@ Each app has its own folder with version tracking. When you bump the `version` i
 
 | Project | Component | Source | Job | sbomify |
 |---------|-----------|--------|-----|---------|
+| [Caddy](https://github.com/caddyserver/caddy) | Caddy | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-caddy.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-caddy.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/caddy/) |
 | [Dependency Track](https://github.com/DependencyTrack/dependency-track) | API Server | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/dependency-track/) |
 | [Dependency Track](https://github.com/DependencyTrack/frontend) | Frontend | GitHub Release | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-dependency-track-frontend.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/dependency-track/) |
 | [OSV Scanner](https://github.com/google/osv-scanner) | OSV Scanner | Lockfile | [![SBOM](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml/badge.svg)](https://github.com/sbomify/library/actions/workflows/sbom-osv-scanner.yml) | [![sbomify](https://sbomify.com/assets/images/logo/badge.svg)](https://library.sbomify.com/product/osv-scanner/) |
@@ -167,9 +168,19 @@ Download SBOMs from GitHub release assets:
 source:
   type: github_release
   repo: "owner/repo"              # GitHub repository (required)
-  asset: "bom.json"               # Asset filename (required)
+  asset: "bom.json"               # Asset filename (required, supports ${version})
   tag_prefix: "v"                 # Tag prefix (default: "")
   tag_suffix: ""                  # Tag suffix (default: "")
+```
+
+The `asset` field supports `${version}` substitution for projects that include the version in the asset filename:
+
+```yaml
+source:
+  type: github_release
+  repo: "caddyserver/caddy"
+  asset: "caddy_${version}_linux_amd64.sbom"  # Becomes caddy_2.10.1_linux_amd64.sbom
+  tag_prefix: "v"
 ```
 
 #### Lockfile Generation
