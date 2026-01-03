@@ -1,0 +1,33 @@
+# SBOM workflow for Keycloak JS
+#
+# Triggers when keycloak-js version or config is updated.
+# Generates SBOM from pnpm-lock.yaml lockfile.
+#
+# https://github.com/keycloak/keycloak
+
+name: "SBOM: keycloak-js"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/keycloak-js/config.yaml'
+      - '.github/workflows/sbom-keycloak-js.yml'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: keycloak-js
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+
