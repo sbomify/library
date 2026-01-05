@@ -17,8 +17,6 @@ source:
   lockfile: "js/pnpm-lock.yaml"
   tag_prefix: ""
   clone: true
-  extra_files:
-    - "js/package.json"
 
 sbomify:
   component_id: "SwIXpcPzBedP"
