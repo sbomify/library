@@ -105,20 +105,13 @@ jobs:
           path: sbom.json
 
       - name: Upload lockfile artifact
-        if: always() && steps.config.outputs.source_type == 'lockfile' && steps.config.outputs.clone != 'true'
+        if: always() && steps.config.outputs.source_type == 'lockfile'
         uses: actions/upload-artifact@v4
         with:
           name: lockfile-${{ inputs.app }}-${{ steps.config.outputs.version }}
-          path: ${{ steps.config.outputs.lockfile }}
+          path: ${{ steps.config.outputs.lockfile_path }}
 
-      - name: Upload cloned repo artifact
-        if: always() && steps.config.outputs.source_type == 'lockfile' && steps.config.outputs.clone == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: repo-${{ inputs.app }}-${{ steps.config.outputs.version }}
-          path: repo/
-
-      - name: Upload to sbomify (SBOM)
+      - name: Build SBOM (from existing SBOM)
         if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
         uses: sbomify/github-action@master
         env:
@@ -133,7 +126,7 @@ jobs:
           UPLOAD: ${{ !inputs.dry_run }}
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
 
-      - name: Upload to sbomify (lockfile)
+      - name: Build SBOM (from lockfile)
         if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
         uses: sbomify/github-action@master
         env:
