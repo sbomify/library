@@ -1,0 +1,25 @@
+# Keycloak JS SBOM Configuration
+#
+# Keycloak is an open source identity and access management solution.
+# This config is for the JavaScript/frontend component.
+#
+# SBOM source: Generated from pnpm-lock.yaml lockfile
+# https://github.com/keycloak/keycloak
+
+name: keycloak-js
+version: "26.4.7"
+
+format: cyclonedx
+
+source:
+  type: lockfile
+  repo: "keycloak/keycloak"
+  lockfile: "js/pnpm-lock.yaml"
+  tag_prefix: ""
+  clone: true
+
+sbomify:
+  component_id: "SwIXpcPzBedP"
+  component_name: "Keycloak JS"
+  product_id: "DYmPnVgOSdyT"
+
