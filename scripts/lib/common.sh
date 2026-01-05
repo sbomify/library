@@ -235,7 +235,7 @@ get_config_array() {
         return 0  # No config file, return empty
     fi
 
-    yq -r "${path}[]? // empty" "$config_file"
+    yq -r "(${path} // [])[]" "$config_file" 2>/dev/null || true
 }
 
 # =============================================================================
