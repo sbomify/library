@@ -27,6 +27,14 @@ if [[ "$clone" == "true" ]]; then
     log_info "Shallow cloning: $repo_url (tag: $tag)"
     git clone --depth 1 --branch "$tag" "$repo_url" repo
     log_info "Cloned: repo/"
+
+    # Run post-clone commands if configured
+    while IFS= read -r cmd; do
+        if [[ -n "$cmd" ]]; then
+            log_info "Running post-clone command: $cmd"
+            (cd repo && bash -c "$cmd")
+        fi
+    done < <(get_config_array "$app" ".source.post_clone_commands")
 else
     # Download just the lockfile
     url="https://raw.githubusercontent.com/${repo}/${tag}/${lockfile}"

@@ -84,6 +84,16 @@ jobs:
             echo "product_release=[\"${PRODUCT_ID}:${VERSION}\"]" >> $GITHUB_OUTPUT
           fi
 
+      - name: Cache Maven dependencies
+        if: steps.config.outputs.source_type == 'lockfile' && steps.config.outputs.clone == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          restore-keys: |
+            maven-${{ inputs.app }}-
+            maven-
+
       - name: Fetch SBOM or lockfile
         run: |
           ./scripts/fetch-sbom.sh "${{ inputs.app }}"

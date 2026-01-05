@@ -84,7 +84,7 @@ die() {
 require_cmd() {
     local cmd="$1"
     local install_hint="${2:-}"
-    
+
     if ! command -v "$cmd" &> /dev/null; then
         if [[ -n "$install_hint" ]]; then
             die "Required command '$cmd' not found. $install_hint"
@@ -105,15 +105,15 @@ check_required_tools() {
 validate_app_dir() {
     local app="$1"
     local app_dir="${APPS_DIR}/${app}"
-    
+
     if [[ ! -d "$app_dir" ]]; then
         die "App directory not found: $app_dir"
     fi
-    
+
     if [[ ! -f "${app_dir}/config.yaml" ]]; then
         die "config.yaml not found in: $app_dir"
     fi
-    
+
     log_debug "Validated app directory: $app_dir"
 }
 
@@ -125,15 +125,15 @@ validate_app_dir() {
 # Accepts: X.Y.Z, X.Y.Z-prerelease, X.Y.Z+build, X.Y.Z-prerelease+build
 validate_semver() {
     local version="$1"
-    
+
     # Semver regex pattern
     # Matches: MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]
     local semver_regex='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
-    
+
     if [[ ! "$version" =~ $semver_regex ]]; then
         return 1
     fi
-    
+
     return 0
 }
 
@@ -141,29 +141,29 @@ validate_semver() {
 get_latest_version() {
     local app="$1"
     local config_file="${APPS_DIR}/${app}/config.yaml"
-    
+
     if [[ ! -f "$config_file" ]]; then
         die "Config file not found: $config_file"
     fi
-    
+
     # Ensure yq is available before attempting to read the config
     if ! command -v yq >/dev/null 2>&1; then
         die "'yq' command not found. It is required to read: $config_file. Please install 'yq' and try again."
     fi
-    
+
     # Read version from config.yaml
     local version
     version="$(yq -r '.version // ""' "$config_file" | tr -d '[:space:]')"
-    
+
     if [[ -z "$version" ]]; then
         die "Version not specified in: $config_file"
     fi
-    
+
     # Validate semver format
     if ! validate_semver "$version"; then
         die "Invalid version '$version' in $config_file. Must be valid semver (e.g., 1.2.3, 1.2.3-rc1, 1.2.3+build)"
     fi
-    
+
     echo "$version"
 }
 
@@ -223,6 +223,21 @@ get_sbomify_component_id() {
     get_config "$app" ".sbomify.component_id"
 }
 
+# Get array values from app config.yaml
+# Usage: get_config_array <app> <path>
+# Outputs each array element on a separate line
+get_config_array() {
+    local app="$1"
+    local path="$2"
+    local config_file="${APPS_DIR}/${app}/config.yaml"
+
+    if [[ ! -f "$config_file" ]]; then
+        return 0  # No config file, return empty
+    fi
+
+    yq -r "${path}[]? // empty" "$config_file"
+}
+
 # =============================================================================
 # Utility Functions
 # =============================================================================
@@ -249,10 +264,10 @@ create_temp_dir() {
     local prefix="${1:-sbom}"
     local temp_dir
     temp_dir="$(mktemp -d -t "${prefix}.XXXXXX")"
-    
+
     # Add to cleanup list
     _SBOM_TEMP_DIRS+=("$temp_dir")
-    
+
     echo "$temp_dir"
 }
 
@@ -274,11 +289,11 @@ run_cmd() {
 # Validate JSON output
 validate_json() {
     local input="$1"
-    
+
     if ! echo "$input" | jq empty 2>/dev/null; then
         die "Invalid JSON output"
     fi
-    
+
     log_debug "JSON validation passed"
 }
 
@@ -286,10 +301,10 @@ validate_json() {
 validate_sbom() {
     local sbom="$1"
     local format="$2"
-    
+
     # Check it's valid JSON first
     validate_json "$sbom"
-    
+
     case "$format" in
         cyclonedx)
             # Check for bomFormat field
@@ -307,7 +322,7 @@ validate_sbom() {
             log_warn "Unknown SBOM format: $format, skipping validation"
             ;;
     esac
-    
+
     log_debug "SBOM validation passed for format: $format"
 }
 
@@ -315,7 +330,7 @@ validate_sbom() {
 print_usage() {
     local script_name="$1"
     local description="$2"
-    
+
     cat >&2 <<EOF
 Usage: $script_name <app-name> [options]
 
