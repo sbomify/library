@@ -95,17 +95,7 @@ jobs:
             maven-
 
       - name: Fetch SBOM or lockfile
-        run: |
-          ./scripts/fetch-sbom.sh "${{ inputs.app }}"
-          if [[ "${{ steps.config.outputs.source_type }}" == "lockfile" ]]; then
-            if [[ "${{ steps.config.outputs.clone }}" == "true" ]]; then
-              ls -la repo/
-            else
-              ls -la "${{ steps.config.outputs.lockfile }}"
-            fi
-          else
-            ls -la sbom.json
-          fi
+        run: ./scripts/fetch-sbom.sh "${{ inputs.app }}"
 
       - name: Upload input artifact
         if: always() && steps.config.outputs.source_type != 'lockfile'

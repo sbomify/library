@@ -25,7 +25,7 @@ if [[ "$clone" == "true" ]]; then
     # Shallow clone the repository
     repo_url="https://github.com/${repo}.git"
     log_info "Shallow cloning: $repo_url (tag: $tag)"
-    git clone --depth 1 --branch "$tag" "$repo_url" repo
+    git -c advice.detachedHead=false clone --depth 1 --branch "$tag" "$repo_url" repo
     log_info "Cloned: repo/"
 
     # Run post-clone commands if configured
