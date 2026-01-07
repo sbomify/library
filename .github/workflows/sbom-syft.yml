@@ -1,0 +1,37 @@
+# SBOM workflow for Syft
+#
+# Triggers when syft version or config is updated.
+# Downloads SBOM from GitHub releases (per-architecture).
+#
+# https://github.com/anchore/syft
+
+name: "SBOM: syft"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/syft/config.yaml'
+      - '.github/workflows/sbom-syft.yml'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: syft
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+

@@ -1,0 +1,25 @@
+# Syft SBOM Configuration
+#
+# Syft is a CLI tool and library for generating a Software Bill of Materials
+# from container images and filesystems.
+#
+# SBOM source: Lockfile (go.mod from GitHub release)
+# https://github.com/anchore/syft
+
+name: syft
+version: "1.39.0"
+
+# cdxgen generates CycloneDX SBOMs from the Go lockfile
+format: cyclonedx
+
+source:
+  type: lockfile
+  repo: "anchore/syft"
+  lockfile: "go.mod"
+  tag_prefix: "v"
+
+sbomify:
+  component_id: "AGWWwQ5T2dP1"
+  component_name: "Syft"
+  product_id: "JaBHDMM1gmuZ"
+
