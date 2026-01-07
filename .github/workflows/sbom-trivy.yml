@@ -1,0 +1,37 @@
+# SBOM workflow for Trivy
+#
+# Triggers when trivy version or config is updated.
+# Downloads SBOM from GitHub releases.
+#
+# https://github.com/aquasecurity/trivy
+
+name: "SBOM: trivy"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/trivy/config.yaml'
+      - '.github/workflows/sbom-trivy.yml'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: trivy
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+

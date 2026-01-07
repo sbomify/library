@@ -1,0 +1,24 @@
+# Syft SBOM Configuration
+#
+# Syft is a CLI tool and library for generating a Software Bill of Materials
+# from container images and filesystems.
+#
+# SBOM source: GitHub releases (per-architecture SBOM)
+# https://github.com/anchore/syft
+
+name: syft
+version: "1.39.0"
+
+format: syft-json
+
+source:
+  type: github_release
+  repo: "anchore/syft"
+  asset: "syft_${version}_linux_amd64.sbom"
+  tag_prefix: "v"
+
+sbomify:
+  component_id: "AGWWwQ5T2dP1"
+  component_name: "Syft"
+  product_id: "JaBHDMM1gmuZ"
+

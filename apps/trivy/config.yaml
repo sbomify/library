@@ -1,0 +1,24 @@
+# Trivy SBOM Configuration
+#
+# Trivy is a comprehensive security scanner that finds vulnerabilities,
+# misconfigurations, secrets, and SBOMs.
+#
+# SBOM source: GitHub releases
+# https://github.com/aquasecurity/trivy
+
+name: trivy
+version: "0.68.2"
+
+format: cyclonedx
+
+source:
+  type: github_release
+  repo: "aquasecurity/trivy"
+  asset: "bom.json"
+  tag_prefix: "v"
+
+sbomify:
+  component_id: "D1h5y3TC4GqX"
+  component_name: "Trivy"
+  product_id: "X7qe2Jyf9r29"
+
