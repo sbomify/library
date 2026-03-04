@@ -32,7 +32,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache tools
+        id: tool-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/local/bin/yq
+            /usr/local/bin/crane
+            /usr/local/bin/cosign
+          key: tools-yq-${{ env.YQ_VERSION }}-crane-${{ env.CRANE_VERSION }}-cosign-v2.2.2
+
       - name: Install tools
+        if: steps.tool-cache.outputs.cache-hit != 'true'
         run: |
           # yq
           sudo curl -fsSL -o /usr/local/bin/yq \
@@ -45,14 +56,9 @@ jobs:
             | tar -xzf -
           sudo mv crane /usr/local/bin/
 
-          # Source-specific tools
-          SOURCE=$(yq -r '.source.type' "apps/${{ inputs.app }}/config.yaml")
-          case "$SOURCE" in
-            chainguard)
-              curl -sLO "https://github.com/sigstore/cosign/releases/download/v2.2.2/cosign-linux-amd64"
-              sudo install cosign-linux-amd64 /usr/local/bin/cosign
-              ;;
-          esac
+          # cosign (needed for chainguard sources)
+          curl -sLO "https://github.com/sigstore/cosign/releases/download/v2.2.2/cosign-linux-amd64"
+          sudo install cosign-linux-amd64 /usr/local/bin/cosign
 
       - name: Read config
         id: config
