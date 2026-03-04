@@ -1,0 +1,12 @@
+name: rockylinux
+version: "9.3.20231119"
+format: spdx
+source:
+  type: docker
+  image: "library/rockylinux"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "i5J4KAiSsaqE"
+  component_name: "Rocky Linux"
+  product_id: "wygKtpYVDXmj"

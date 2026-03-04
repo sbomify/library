@@ -1,0 +1,12 @@
+name: oraclelinux
+version: "9"
+format: spdx
+source:
+  type: docker
+  image: "library/oraclelinux"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "TeYsJGy2bHD0"
+  component_name: "Oracle Linux"
+  product_id: "nmIyLDwnDXPo"

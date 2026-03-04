@@ -1,0 +1,12 @@
+name: haskell
+version: "9.14.1"
+format: spdx
+source:
+  type: docker
+  image: "library/haskell"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "lvFUstRqj6RI"
+  component_name: "Haskell (GHC)"
+  product_id: "XZnGHIbIxZ8r"

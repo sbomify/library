@@ -1,0 +1,12 @@
+name: fedora
+version: "43"
+format: spdx
+source:
+  type: docker
+  image: "library/fedora"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "khNxcYfndgS8"
+  component_name: "Fedora"
+  product_id: "BLpdu71SwXSy"

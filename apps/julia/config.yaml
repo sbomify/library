@@ -1,0 +1,12 @@
+name: julia
+version: "1.12.5"
+format: spdx
+source:
+  type: docker
+  image: "library/julia"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "Ib4LRrXkb6kM"
+  component_name: "Julia"
+  product_id: "iia9JH3ewVZq"

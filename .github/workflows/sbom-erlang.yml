@@ -1,20 +1,12 @@
-# SBOM workflow for Nextcloud (Docker Official)
-#
-# Triggers when nextcloud config is updated.
-# Extracts SBOM from Docker OCI attestation (SPDX).
-# Also picked up by tea-sync hourly for image digest changes.
-#
-# https://hub.docker.com/_/nextcloud
-
-name: "SBOM: nextcloud"
+name: "SBOM: erlang"
 
 on:
   push:
     branches:
       - master
     paths:
-      - 'apps/nextcloud/config.yaml'
-      - '.github/workflows/sbom-nextcloud.yml'
+      - 'apps/erlang/config.yaml'
+      - '.github/workflows/sbom-erlang.yml'
 
   workflow_dispatch:
     inputs:
@@ -28,7 +20,7 @@ jobs:
   build:
     uses: ./.github/workflows/sbom-builder.yml
     with:
-      app: nextcloud
+      app: erlang
       dry_run: ${{ github.event.inputs.dry_run == 'true' }}
     secrets: inherit
     permissions:

@@ -42,6 +42,7 @@ Each app has its own folder with version tracking. When you bump the `version` i
 │       └── config.yaml               # App configuration (includes version)
 ├── scripts/
 │   ├── fetch-sbom.sh                 # Main entry point
+│   ├── check-updates.sh              # Check for upstream version updates
 │   ├── lib/
 │   │   └── common.sh                 # Shared utilities
 │   └── sources/
@@ -234,9 +235,6 @@ For lockfile sources:
 ### Running Locally
 
 ```bash
-# List available apps
-./scripts/fetch-sbom.sh --list
-
 # Fetch SBOM for an app
 ./scripts/fetch-sbom.sh nginx
 
@@ -245,12 +243,28 @@ For lockfile sources:
 
 # Dry-run mode (no actual fetching)
 ./scripts/fetch-sbom.sh nginx --dry-run
+```
 
-# Output to file
-./scripts/fetch-sbom.sh nginx --output sbom.json
+### Checking for Updates
 
-# Override version
-./scripts/fetch-sbom.sh nginx --version 1.24.0
+```bash
+# Check all apps for upstream version updates
+./scripts/check-updates.sh
+
+# Only check specific source type
+./scripts/check-updates.sh --type docker
+
+# Check specific apps
+./scripts/check-updates.sh --app redis,trivy
+
+# Auto-update config.yaml files
+./scripts/check-updates.sh --update
+
+# Preview updates without writing
+./scripts/check-updates.sh --update --dry-run
+
+# JSON output (for CI)
+./scripts/check-updates.sh --json
 ```
 
 ### Environment Variables
