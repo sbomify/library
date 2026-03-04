@@ -107,6 +107,22 @@ jobs:
             echo "product_release=[\"${PRODUCT_ID}:${VERSION}\"]" >> $GITHUB_OUTPUT
           fi
 
+          # Build PURL for TEA dedup lookup
+          SOURCE_TYPE=$(yq -r '.source.type // ""' "$CONFIG")
+          IMAGE=$(yq -r '.source.image // ""' "$CONFIG")
+          REGISTRY=$(yq -r '.source.registry // ""' "$CONFIG")
+          REPO=$(yq -r '.source.repo // ""' "$CONFIG")
+          case "$SOURCE_TYPE" in
+            docker)
+              echo "purl=pkg:docker/${IMAGE}@${VERSION}" >> "$GITHUB_OUTPUT" ;;
+            chainguard)
+              echo "purl=pkg:oci/${REGISTRY}/${IMAGE}@${VERSION}" >> "$GITHUB_OUTPUT" ;;
+            github_release|lockfile)
+              echo "purl=pkg:github/${REPO}@${VERSION}" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "purl=" >> "$GITHUB_OUTPUT" ;;
+          esac
+
       - name: Cache fetched SBOM
         id: sbom-cache
         if: steps.config.outputs.source_type == 'github_release'
@@ -189,26 +205,31 @@ jobs:
           ENRICH: true
           UPLOAD: false
 
-      # Phase 2: Check if this exact SBOM is already published
+      # Phase 2: Check if this version is already published via TEA PURL lookup
       - name: Install uv
         if: steps.config.outputs.component_id != '' && !inputs.dry_run
         uses: astral-sh/setup-uv@v4
 
-      - name: Check TEA for existing SBOM
+      - name: Check TEA for existing version
         id: tea-check
         if: steps.config.outputs.component_id != '' && !inputs.dry_run
         run: |
-          sbom_hash=$(sha256sum sbom-output.json | cut -d' ' -f1)
-          echo "SBOM hash: $sbom_hash"
-          tei="urn:tei:hash:library.sbomify.com:sha256:${sbom_hash}"
+          purl="${{ steps.config.outputs.purl }}"
+          if [[ -z "$purl" ]]; then
+            echo "No PURL available, will upload"
+            echo "should_upload=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          tei="urn:tei:purl:library.sbomify.com:${purl}"
           echo "TEI: $tei"
 
-          result=$(uvx --from 'libtea[cli]' tea-cli discover "$tei" --json 2>/dev/null || true)
-          if [[ -z "$result" || "$result" == "[]" ]]; then
-            echo "SBOM not found on TEA, will upload"
+          result=$(uvx --from 'libtea[cli]' tea-cli inspect "$tei" --json 2>/dev/null || true)
+          if [[ -z "$result" || "$result" == "{}" || "$result" == "null" ]]; then
+            echo "Version not found on TEA, will upload"
             echo "should_upload=true" >> "$GITHUB_OUTPUT"
           else
-            echo "SBOM already published on TEA, skipping upload"
+            echo "Version already published on TEA, skipping upload"
             echo "should_upload=false" >> "$GITHUB_OUTPUT"
           fi
 
