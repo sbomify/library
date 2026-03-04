@@ -46,19 +46,24 @@ jobs:
         if: steps.tool-cache.outputs.cache-hit != 'true'
         run: |
           # yq
-          sudo curl -fsSL -o /usr/local/bin/yq \
+          curl -fsSL -o /tmp/yq \
             "https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_amd64"
-          sudo chmod +x /usr/local/bin/yq
+          echo "0d6aaf1cf44a8d18fbc7ed0ef14f735a8df8d2e314c4cc0f0242d35c0a440c95  /tmp/yq" | sha256sum -c -
+          sudo install /tmp/yq /usr/local/bin/yq
 
           # crane
           CRANE_URL="https://github.com/google/go-containerregistry/releases/download"
-          curl -fsSL "${CRANE_URL}/${{ env.CRANE_VERSION }}/go-containerregistry_Linux_x86_64.tar.gz" \
-            | tar -xzf -
-          sudo mv crane /usr/local/bin/
+          curl -fsSL -o /tmp/crane.tar.gz \
+            "${CRANE_URL}/${{ env.CRANE_VERSION }}/go-containerregistry_Linux_x86_64.tar.gz"
+          echo "1b4d3ee1e214776bd74b88741ccf1b070e8ed5660056f05af632a1a399fe21c6  /tmp/crane.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/crane.tar.gz -C /tmp crane
+          sudo install /tmp/crane /usr/local/bin/crane
 
           # cosign (needed for chainguard sources)
-          curl -sLO "https://github.com/sigstore/cosign/releases/download/v2.2.2/cosign-linux-amd64"
-          sudo install cosign-linux-amd64 /usr/local/bin/cosign
+          curl -fsSL -o /tmp/cosign \
+            "https://github.com/sigstore/cosign/releases/download/v2.2.2/cosign-linux-amd64"
+          echo "121ba0031827c090364894688049651d3a0a82a87235c469322a202aa2944211  /tmp/cosign" | sha256sum -c -
+          sudo install /tmp/cosign /usr/local/bin/cosign
 
       - name: Read config
         id: config
@@ -90,8 +95,28 @@ jobs:
             echo "product_release=[\"${PRODUCT_ID}:${VERSION}\"]" >> $GITHUB_OUTPUT
           fi
 
+      - name: Cache fetched SBOM
+        id: sbom-cache
+        if: steps.config.outputs.source_type != 'lockfile'
+        uses: actions/cache@v4
+        with:
+          path: sbom.json
+          key: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
+
+      - name: Cache fetched lockfile
+        id: lockfile-cache
+        if: steps.config.outputs.source_type == 'lockfile'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.config.outputs.lockfile_path }}
+            repo/
+          key: lockfile-${{ inputs.app }}-${{ steps.config.outputs.version }}
+
       - name: Cache Maven dependencies
-        if: steps.config.outputs.source_type == 'lockfile' && steps.config.outputs.clone == 'true'
+        if: >-
+          steps.config.outputs.source_type == 'lockfile' && steps.config.outputs.clone == 'true'
+          && steps.lockfile-cache.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
@@ -101,6 +126,9 @@ jobs:
             maven-
 
       - name: Fetch SBOM or lockfile
+        if: >-
+          (steps.sbom-cache.outputs.cache-hit != 'true' && steps.config.outputs.source_type != 'lockfile')
+          || (steps.lockfile-cache.outputs.cache-hit != 'true' && steps.config.outputs.source_type == 'lockfile')
         run: ./scripts/fetch-sbom.sh "${{ inputs.app }}"
 
       - name: Upload input artifact
