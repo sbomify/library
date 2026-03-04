@@ -20,6 +20,7 @@ on:
 env:
   YQ_VERSION: "v4.40.5"
   CRANE_VERSION: "v0.17.0"
+  COSIGN_VERSION: "v2.2.2"
 
 jobs:
   build:
@@ -40,29 +41,38 @@ jobs:
             /usr/local/bin/yq
             /usr/local/bin/crane
             /usr/local/bin/cosign
-          key: tools-yq-${{ env.YQ_VERSION }}-crane-${{ env.CRANE_VERSION }}-cosign-v2.2.2
+          key: tools-yq-${{ env.YQ_VERSION }}-crane-${{ env.CRANE_VERSION }}-cosign-${{ env.COSIGN_VERSION }}
 
       - name: Install tools
         if: steps.tool-cache.outputs.cache-hit != 'true'
         run: |
-          # yq
-          curl -fsSL -o /tmp/yq \
-            "https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_amd64"
-          echo "0d6aaf1cf44a8d18fbc7ed0ef14f735a8df8d2e314c4cc0f0242d35c0a440c95  /tmp/yq" | sha256sum -c -
+          # yq — download binary and checksums from release
+          YQ_BASE="https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}"
+          curl -fsSL -o /tmp/yq "${YQ_BASE}/yq_linux_amd64"
+          curl -fsSL -o /tmp/yq_checksums "${YQ_BASE}/checksums-bsd"
+          expected=$(grep 'SHA256 (yq_linux_amd64)' /tmp/yq_checksums | awk '{print $NF}')
+          actual=$(sha256sum /tmp/yq | awk '{print $1}')
+          echo "yq: expected=$expected actual=$actual"
+          [[ "$expected" == "$actual" ]] || { echo "yq checksum mismatch"; exit 1; }
           sudo install /tmp/yq /usr/local/bin/yq
 
-          # crane
-          CRANE_URL="https://github.com/google/go-containerregistry/releases/download"
-          curl -fsSL -o /tmp/crane.tar.gz \
-            "${CRANE_URL}/${{ env.CRANE_VERSION }}/go-containerregistry_Linux_x86_64.tar.gz"
-          echo "1b4d3ee1e214776bd74b88741ccf1b070e8ed5660056f05af632a1a399fe21c6  /tmp/crane.tar.gz" | sha256sum -c -
+          # crane — download tarball and checksums from release
+          CRANE_BASE="https://github.com/google/go-containerregistry/releases/download/${{ env.CRANE_VERSION }}"
+          curl -fsSL -o /tmp/crane.tar.gz "${CRANE_BASE}/go-containerregistry_Linux_x86_64.tar.gz"
+          curl -fsSL -o /tmp/crane_checksums.txt "${CRANE_BASE}/checksums.txt"
+          grep go-containerregistry_Linux_x86_64.tar.gz /tmp/crane_checksums.txt \
+            | sed 's|go-containerregistry_Linux_x86_64.tar.gz|/tmp/crane.tar.gz|' \
+            | sha256sum -c -
           tar -xzf /tmp/crane.tar.gz -C /tmp crane
           sudo install /tmp/crane /usr/local/bin/crane
 
-          # cosign (needed for chainguard sources)
-          curl -fsSL -o /tmp/cosign \
-            "https://github.com/sigstore/cosign/releases/download/v2.2.2/cosign-linux-amd64"
-          echo "121ba0031827c090364894688049651d3a0a82a87235c469322a202aa2944211  /tmp/cosign" | sha256sum -c -
+          # cosign — download binary and checksums from release
+          COSIGN_BASE="https://github.com/sigstore/cosign/releases/download/${{ env.COSIGN_VERSION }}"
+          curl -fsSL -o /tmp/cosign "${COSIGN_BASE}/cosign-linux-amd64"
+          curl -fsSL -o /tmp/cosign_checksums.txt "${COSIGN_BASE}/cosign_checksums.txt"
+          grep 'cosign-linux-amd64$' /tmp/cosign_checksums.txt \
+            | sed 's|cosign-linux-amd64|/tmp/cosign|' \
+            | sha256sum -c -
           sudo install /tmp/cosign /usr/local/bin/cosign
 
       - name: Read config
