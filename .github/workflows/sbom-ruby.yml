@@ -1,0 +1,37 @@
+# SBOM workflow for Ruby (Docker Official)
+#
+# Triggers when ruby config is updated.
+# Extracts SBOM from Docker OCI attestation (SPDX).
+# Also picked up by tea-sync hourly for image digest changes.
+#
+# https://hub.docker.com/_/ruby
+
+name: "SBOM: ruby"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/ruby/config.yaml'
+      - '.github/workflows/sbom-ruby.yml'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: ruby
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write

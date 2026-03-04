@@ -1,0 +1,29 @@
+name: "SBOM: haskell"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/haskell/config.yaml'
+      - '.github/workflows/sbom-haskell.yml'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: haskell
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write

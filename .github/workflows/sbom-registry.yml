@@ -1,0 +1,37 @@
+# SBOM workflow for Docker Registry (Docker Official)
+#
+# Triggers when registry config is updated.
+# Extracts SBOM from Docker OCI attestation (SPDX).
+# Also picked up by tea-sync hourly for image digest changes.
+#
+# https://hub.docker.com/_/registry
+
+name: "SBOM: registry"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/registry/config.yaml'
+      - '.github/workflows/sbom-registry.yml'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: registry
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write

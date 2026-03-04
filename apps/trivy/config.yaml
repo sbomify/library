@@ -7,7 +7,7 @@
 # https://github.com/aquasecurity/trivy
 
 name: trivy
-version: "0.68.2"
+version: "0.69.3"
 
 format: cyclonedx
 

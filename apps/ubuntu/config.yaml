@@ -1,0 +1,14 @@
+name: ubuntu
+version: "24.04"
+format: spdx
+
+source:
+  type: docker
+  image: "library/ubuntu"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "MQUTwkIrxtOz"
+  component_name: "Ubuntu"
+  product_id: "u6ss2KevHMvn"

@@ -1,0 +1,78 @@
+# TEA Sync - Rebuild SBOMs for docker/chainguard apps
+#
+# Runs hourly to detect when upstream images change without a version bump.
+# Triggers the SBOM builder for all docker/chainguard apps. The builder
+# itself handles deduplication via TEA hash lookup — if the augmented SBOM
+# is already published, the upload is skipped.
+
+name: TEA Sync
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+env:
+  YQ_VERSION: "v4.40.5"
+
+jobs:
+  detect:
+    name: Find docker/chainguard apps
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.find-apps.outputs.apps }}
+      has_apps: ${{ steps.find-apps.outputs.has_apps }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo curl -fsSL -o /usr/local/bin/yq \
+            "https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Find eligible apps
+        id: find-apps
+        run: |
+          apps=()
+
+          for config in apps/*/config.yaml; do
+            app=$(basename "$(dirname "$config")")
+            source_type=$(yq -r '.source.type // ""' "$config")
+
+            if [[ "$source_type" == "docker" || "$source_type" == "chainguard" ]]; then
+              echo "Found: $app ($source_type)"
+              apps+=("$app")
+            else
+              echo "Skipping $app ($source_type)"
+            fi
+          done
+
+          json=$(printf '%s\n' "${apps[@]}" | jq -R -s -c 'split("\n") | map(select(. != ""))')
+          echo "Apps: $json"
+          echo "apps=${json}" >> "$GITHUB_OUTPUT"
+
+          if [[ ${#apps[@]} -eq 0 ]]; then
+            echo "has_apps=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_apps=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  sync:
+    name: Sync ${{ matrix.app }}
+    needs: detect
+    if: needs.detect.outputs.has_apps == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.detect.outputs.apps) }}
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: ${{ matrix.app }}
+      dry_run: false
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write

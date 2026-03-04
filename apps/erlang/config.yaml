@@ -1,0 +1,12 @@
+name: erlang
+version: "28.3.2.0"
+format: spdx
+source:
+  type: docker
+  image: "library/erlang"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "OrIcXZsMLVWF"
+  component_name: "Erlang"
+  product_id: "v1DMlwjOnrom"

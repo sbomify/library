@@ -1,0 +1,24 @@
+# Nginx (Chainguard) SBOM Configuration
+#
+# Chainguard's hardened, minimal nginx image.
+# Uses rolling "latest" tag — digest changes without version bumps.
+# The tea-sync workflow detects new digests hourly.
+#
+# SBOM source: Chainguard cosign attestation (SPDX)
+# https://images.chainguard.dev/directory/image/nginx/overview
+
+name: nginx
+version: "latest"
+
+# Chainguard publishes SPDX SBOMs
+format: spdx
+
+source:
+  type: chainguard
+  image: "nginx"
+  registry: "cgr.dev/chainguard"
+
+sbomify:
+  component_id: "dmScTBXv5wN3"
+  component_name: "Nginx (Chainguard)"
+  product_id: "XoC0Ro4ozkjL"

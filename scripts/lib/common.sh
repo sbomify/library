@@ -159,8 +159,12 @@ get_latest_version() {
         die "Version not specified in: $config_file"
     fi
 
-    # Validate semver format
-    if ! validate_semver "$version"; then
+    # Validate semver format (skip for chainguard rolling tags like "latest")
+    local source_type
+    source_type="$(yq -r '.source.type // ""' "$config_file")"
+    if [[ "$source_type" == "chainguard" || "$source_type" == "docker" ]]; then
+        log_debug "Skipping semver validation for $source_type source (version: $version)"
+    elif ! validate_semver "$version"; then
         die "Invalid version '$version' in $config_file. Must be valid semver (e.g., 1.2.3, 1.2.3-rc1, 1.2.3+build)"
     fi
 

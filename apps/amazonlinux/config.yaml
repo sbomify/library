@@ -1,0 +1,12 @@
+name: amazonlinux
+version: "2023"
+format: spdx
+source:
+  type: docker
+  image: "library/amazonlinux"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "Ee393Rqsm1Cr"
+  component_name: "Amazon Linux"
+  product_id: "iF4eFtDmkYOL"

@@ -1,0 +1,12 @@
+name: rust
+version: "1.93.1"
+format: spdx
+source:
+  type: docker
+  image: "library/rust"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "BEoovD29bNnb"
+  component_name: "Rust"
+  product_id: "HBed132Jij5T"

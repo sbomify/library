@@ -1,0 +1,14 @@
+name: influxdb
+version: "2"
+format: spdx
+
+source:
+  type: docker
+  image: "library/influxdb"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "NH9kzZvGvdSc"
+  component_name: "InfluxDB"
+  product_id: "D1yKmXUTXaCp"

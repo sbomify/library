@@ -1,0 +1,14 @@
+name: rabbitmq
+version: "4.2.4"
+format: spdx
+
+source:
+  type: docker
+  image: "library/rabbitmq"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "tqp9wVrYpse1"
+  component_name: "RabbitMQ"
+  product_id: "Dg3DbwkrOe6p"

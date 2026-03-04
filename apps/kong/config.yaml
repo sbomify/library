@@ -1,0 +1,14 @@
+name: kong
+version: "3.9.1"
+format: spdx
+
+source:
+  type: docker
+  image: "library/kong"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "btLdIJ8XHsvx"
+  component_name: "Kong Gateway"
+  product_id: "apMx45XrFGit"

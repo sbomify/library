@@ -1,0 +1,12 @@
+name: elixir
+version: "1.19.5"
+format: spdx
+source:
+  type: docker
+  image: "library/elixir"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "lAFrNPRyd3C0"
+  component_name: "Elixir"
+  product_id: "rAsJawga7rVs"

@@ -1,0 +1,14 @@
+name: neo4j
+version: "2026.01.4"
+format: spdx
+
+source:
+  type: docker
+  image: "library/neo4j"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "kKzm0AbaxSfa"
+  component_name: "Neo4j"
+  product_id: "RWF5CMAXxuKa"

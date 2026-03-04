@@ -1,0 +1,12 @@
+name: swift
+version: "6.2.4"
+format: spdx
+source:
+  type: docker
+  image: "library/swift"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "uPJ2g6Z99b7U"
+  component_name: "Swift"
+  product_id: "yQzOiXrBpbzE"

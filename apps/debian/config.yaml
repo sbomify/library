@@ -1,0 +1,14 @@
+name: debian
+version: "12.11"
+format: spdx
+
+source:
+  type: docker
+  image: "library/debian"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "utUsXu1LAKcy"
+  component_name: "Debian"
+  product_id: "gTiCfNK5WqNu"

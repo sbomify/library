@@ -1,0 +1,29 @@
+name: "SBOM: elixir"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/elixir/config.yaml'
+      - '.github/workflows/sbom-elixir.yml'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: elixir
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write

@@ -1,0 +1,14 @@
+name: php
+version: "8.5.3"
+format: spdx
+
+source:
+  type: docker
+  image: "library/php"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "evPPPwZEs7pI"
+  component_name: "PHP"
+  product_id: "vbwatn2kX9VJ"

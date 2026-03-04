@@ -1,0 +1,14 @@
+name: memcached
+version: "1.6.40"
+format: spdx
+
+source:
+  type: docker
+  image: "library/memcached"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "DY5PDr2HvmO8"
+  component_name: "Memcached"
+  product_id: "mdU5IaJL0a3c"

@@ -1,0 +1,14 @@
+name: mongo-express
+version: "1.0.2"
+format: spdx
+
+source:
+  type: docker
+  image: "library/mongo-express"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "rAcKnctmMHtZ"
+  component_name: "Mongo Express"
+  product_id: "k2q6dJXPDE7a"

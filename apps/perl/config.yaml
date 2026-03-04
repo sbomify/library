@@ -1,0 +1,14 @@
+name: perl
+version: "5.42.0"
+format: spdx
+
+source:
+  type: docker
+  image: "library/perl"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "q7ONfvgQrpQ3"
+  component_name: "Perl"
+  product_id: "MTiQM6a0DKHM"

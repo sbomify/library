@@ -1,0 +1,14 @@
+name: solr
+version: "9.10.1"
+format: spdx
+
+source:
+  type: docker
+  image: "library/solr"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "NXBRWSLTOvgb"
+  component_name: "Apache Solr"
+  product_id: "qQ4HLsTl0pPF"

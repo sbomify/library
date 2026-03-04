@@ -1,0 +1,14 @@
+name: mariadb
+version: "12.2.2"
+format: spdx
+
+source:
+  type: docker
+  image: "library/mariadb"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "Fn2CB6i5QCyg"
+  component_name: "MariaDB"
+  product_id: "N2WH3M4WIeSe"

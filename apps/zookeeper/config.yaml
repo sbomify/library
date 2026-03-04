@@ -1,0 +1,14 @@
+name: zookeeper
+version: "3.9.4"
+format: spdx
+
+source:
+  type: docker
+  image: "library/zookeeper"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "YedZJ5vtjyHE"
+  component_name: "Apache ZooKeeper"
+  product_id: "B0VJWZ8OOOBg"

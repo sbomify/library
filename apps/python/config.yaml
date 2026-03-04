@@ -1,0 +1,14 @@
+name: python
+version: "3.14.3"
+format: spdx
+
+source:
+  type: docker
+  image: "library/python"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "d5Ckld2GHK36"
+  component_name: "Python"
+  product_id: "DZk3qiQy5ey9"

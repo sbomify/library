@@ -20,6 +20,7 @@ on:
 env:
   YQ_VERSION: "v4.40.5"
   CRANE_VERSION: "v0.17.0"
+  COSIGN_VERSION: "v2.2.2"
 
 jobs:
   build:
@@ -32,27 +33,47 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache tools
+        id: tool-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/local/bin/yq
+            /usr/local/bin/crane
+            /usr/local/bin/cosign
+          key: tools-yq-${{ env.YQ_VERSION }}-crane-${{ env.CRANE_VERSION }}-cosign-${{ env.COSIGN_VERSION }}
+
       - name: Install tools
+        if: steps.tool-cache.outputs.cache-hit != 'true'
         run: |
-          # yq
-          sudo curl -fsSL -o /usr/local/bin/yq \
-            "https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_amd64"
-          sudo chmod +x /usr/local/bin/yq
+          # yq — download binary and checksums from release
+          YQ_BASE="https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}"
+          curl -fsSL -o /tmp/yq "${YQ_BASE}/yq_linux_amd64"
+          curl -fsSL -o /tmp/yq_checksums "${YQ_BASE}/checksums-bsd"
+          expected=$(grep 'SHA256 (yq_linux_amd64)' /tmp/yq_checksums | awk '{print $NF}')
+          actual=$(sha256sum /tmp/yq | awk '{print $1}')
+          echo "yq: expected=$expected actual=$actual"
+          [[ "$expected" == "$actual" ]] || { echo "yq checksum mismatch"; exit 1; }
+          sudo install /tmp/yq /usr/local/bin/yq
 
-          # crane
-          CRANE_URL="https://github.com/google/go-containerregistry/releases/download"
-          curl -fsSL "${CRANE_URL}/${{ env.CRANE_VERSION }}/go-containerregistry_Linux_x86_64.tar.gz" \
-            | tar -xzf -
-          sudo mv crane /usr/local/bin/
+          # crane — download tarball and checksums from release
+          CRANE_BASE="https://github.com/google/go-containerregistry/releases/download/${{ env.CRANE_VERSION }}"
+          curl -fsSL -o /tmp/crane.tar.gz "${CRANE_BASE}/go-containerregistry_Linux_x86_64.tar.gz"
+          curl -fsSL -o /tmp/crane_checksums.txt "${CRANE_BASE}/checksums.txt"
+          grep go-containerregistry_Linux_x86_64.tar.gz /tmp/crane_checksums.txt \
+            | sed 's|go-containerregistry_Linux_x86_64.tar.gz|/tmp/crane.tar.gz|' \
+            | sha256sum -c -
+          tar -xzf /tmp/crane.tar.gz -C /tmp crane
+          sudo install /tmp/crane /usr/local/bin/crane
 
-          # Source-specific tools
-          SOURCE=$(yq -r '.source.type' "apps/${{ inputs.app }}/config.yaml")
-          case "$SOURCE" in
-            chainguard)
-              curl -sLO "https://github.com/sigstore/cosign/releases/download/v2.2.2/cosign-linux-amd64"
-              sudo install cosign-linux-amd64 /usr/local/bin/cosign
-              ;;
-          esac
+          # cosign — download binary and checksums from release
+          COSIGN_BASE="https://github.com/sigstore/cosign/releases/download/${{ env.COSIGN_VERSION }}"
+          curl -fsSL -o /tmp/cosign "${COSIGN_BASE}/cosign-linux-amd64"
+          curl -fsSL -o /tmp/cosign_checksums.txt "${COSIGN_BASE}/cosign_checksums.txt"
+          grep 'cosign-linux-amd64$' /tmp/cosign_checksums.txt \
+            | sed 's|cosign-linux-amd64|/tmp/cosign|' \
+            | sha256sum -c -
+          sudo install /tmp/cosign /usr/local/bin/cosign
 
       - name: Read config
         id: config
@@ -84,8 +105,28 @@ jobs:
             echo "product_release=[\"${PRODUCT_ID}:${VERSION}\"]" >> $GITHUB_OUTPUT
           fi
 
+      - name: Cache fetched SBOM
+        id: sbom-cache
+        if: steps.config.outputs.source_type != 'lockfile'
+        uses: actions/cache@v4
+        with:
+          path: sbom.json
+          key: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
+
+      - name: Cache fetched lockfile
+        id: lockfile-cache
+        if: steps.config.outputs.source_type == 'lockfile'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.config.outputs.lockfile_path }}
+            repo/
+          key: lockfile-${{ inputs.app }}-${{ steps.config.outputs.version }}
+
       - name: Cache Maven dependencies
-        if: steps.config.outputs.source_type == 'lockfile' && steps.config.outputs.clone == 'true'
+        if: >-
+          steps.config.outputs.source_type == 'lockfile' && steps.config.outputs.clone == 'true'
+          && steps.lockfile-cache.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
@@ -95,6 +136,9 @@ jobs:
             maven-
 
       - name: Fetch SBOM or lockfile
+        if: >-
+          (steps.sbom-cache.outputs.cache-hit != 'true' && steps.config.outputs.source_type != 'lockfile')
+          || (steps.lockfile-cache.outputs.cache-hit != 'true' && steps.config.outputs.source_type == 'lockfile')
         run: ./scripts/fetch-sbom.sh "${{ inputs.app }}"
 
       - name: Upload input artifact
@@ -111,9 +155,10 @@ jobs:
           name: lockfile-${{ inputs.app }}-${{ steps.config.outputs.version }}
           path: ${{ steps.config.outputs.lockfile_path }}
 
+      # Phase 1: Build augmented SBOM locally (no upload)
       - name: Build SBOM (from existing SBOM)
         if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
-        uses: sbomify/github-action@master
+        uses: sbomify/sbomify-action@master
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
           COMPONENT_ID: ${{ steps.config.outputs.component_id }}
@@ -123,12 +168,11 @@ jobs:
           OUTPUT_FILE: sbom-output.json
           AUGMENT: true
           ENRICH: true
-          UPLOAD: ${{ !inputs.dry_run }}
-          PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+          UPLOAD: false
 
       - name: Build SBOM (from lockfile)
         if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
-        uses: sbomify/github-action@master
+        uses: sbomify/sbomify-action@master
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
           COMPONENT_ID: ${{ steps.config.outputs.component_id }}
@@ -138,7 +182,60 @@ jobs:
           OUTPUT_FILE: sbom-output.json
           AUGMENT: true
           ENRICH: true
-          UPLOAD: ${{ !inputs.dry_run }}
+          UPLOAD: false
+
+      # Phase 2: Check if this exact SBOM is already published
+      - name: Install uv
+        if: steps.config.outputs.component_id != '' && !inputs.dry_run
+        uses: astral-sh/setup-uv@v4
+
+      - name: Check TEA for existing SBOM
+        id: tea-check
+        if: steps.config.outputs.component_id != '' && !inputs.dry_run
+        run: |
+          sbom_hash=$(sha256sum sbom-output.json | cut -d' ' -f1)
+          echo "SBOM hash: $sbom_hash"
+          tei="urn:tei:hash:library.sbomify.com:sha256:${sbom_hash}"
+          echo "TEI: $tei"
+
+          result=$(uvx --from 'libtea[cli]' tea-cli discover "$tei" --json 2>/dev/null || true)
+          if [[ -z "$result" || "$result" == "[]" ]]; then
+            echo "SBOM not found on TEA, will upload"
+            echo "should_upload=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "SBOM already published on TEA, skipping upload"
+            echo "should_upload=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Phase 3: Upload only if SBOM is new
+      - name: Upload SBOM (from existing SBOM)
+        if: >-
+          steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
+          && !inputs.dry_run && steps.tea-check.outputs.should_upload == 'true'
+        uses: sbomify/sbomify-action@master
+        env:
+          TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
+          COMPONENT_ID: ${{ steps.config.outputs.component_id }}
+          COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
+          COMPONENT_VERSION: ${{ steps.config.outputs.version }}
+          SBOM_FILE: sbom-output.json
+          OUTPUT_FILE: sbom-final.json
+          UPLOAD: true
+          PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+
+      - name: Upload SBOM (from lockfile)
+        if: >-
+          steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
+          && !inputs.dry_run && steps.tea-check.outputs.should_upload == 'true'
+        uses: sbomify/sbomify-action@master
+        env:
+          TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
+          COMPONENT_ID: ${{ steps.config.outputs.component_id }}
+          COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
+          COMPONENT_VERSION: ${{ steps.config.outputs.version }}
+          SBOM_FILE: sbom-output.json
+          OUTPUT_FILE: sbom-final.json
+          UPLOAD: true
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
 
       - name: Upload output artifact
@@ -149,7 +246,9 @@ jobs:
           path: sbom-output.json
 
       - name: Attest SBOM provenance
-        if: steps.config.outputs.component_id != '' && !inputs.dry_run
+        if: >-
+          steps.config.outputs.component_id != '' && !inputs.dry_run
+          && steps.tea-check.outputs.should_upload == 'true'
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: sbom-output.json

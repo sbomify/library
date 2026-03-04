@@ -1,0 +1,12 @@
+name: r-base
+version: "4.5.2"
+format: spdx
+source:
+  type: docker
+  image: "library/r-base"
+  registry: "docker.io"
+  platform: "linux/amd64"
+sbomify:
+  component_id: "QgmCH64nQWUT"
+  component_name: "R"
+  product_id: "Rri1h5kaem99"

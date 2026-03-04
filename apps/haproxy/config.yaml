@@ -1,0 +1,14 @@
+name: haproxy
+version: "3.3.4"
+format: spdx
+
+source:
+  type: docker
+  image: "library/haproxy"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "m4bqIjHh8QU6"
+  component_name: "HAProxy"
+  product_id: "HS7FZr6Z3xjk"
