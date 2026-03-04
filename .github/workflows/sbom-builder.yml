@@ -213,10 +213,14 @@ jobs:
           fi
 
       # Phase 3: Upload only if SBOM is new
+      # continue-on-error: enrichment changes can produce a new TEA hash for an
+      # already-uploaded component+version; sbomify returns "already exists" which
+      # is benign — the SBOM is already on the platform.
       - name: Upload SBOM (from existing SBOM)
         if: >-
           steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
           && !inputs.dry_run && steps.tea-check.outputs.should_upload == 'true'
+        continue-on-error: true
         uses: sbomify/sbomify-action@master
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
@@ -232,6 +236,7 @@ jobs:
         if: >-
           steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
           && !inputs.dry_run && steps.tea-check.outputs.should_upload == 'true'
+        continue-on-error: true
         uses: sbomify/sbomify-action@master
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
