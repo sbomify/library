@@ -28,9 +28,14 @@ jobs:
 
       - name: Install yq
         run: |
-          sudo curl -fsSL -o /usr/local/bin/yq \
-            "https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_amd64"
-          sudo chmod +x /usr/local/bin/yq
+          YQ_BASE="https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}"
+          curl -fsSL -o /tmp/yq "${YQ_BASE}/yq_linux_amd64"
+          curl -fsSL -o /tmp/yq_checksums "${YQ_BASE}/checksums-bsd"
+          expected=$(grep 'SHA256 (yq_linux_amd64)' /tmp/yq_checksums | awk '{print $NF}')
+          actual=$(sha256sum /tmp/yq | awk '{print $1}')
+          [[ -n "$expected" ]] || { echo "yq checksum not found"; exit 1; }
+          [[ "$expected" == "$actual" ]] || { echo "yq checksum mismatch"; exit 1; }
+          sudo install /tmp/yq /usr/local/bin/yq
 
       - name: Find eligible apps
         id: find-apps
@@ -65,6 +70,7 @@ jobs:
     if: needs.detect.outputs.has_apps == 'true'
     strategy:
       fail-fast: false
+      max-parallel: 10
       matrix:
         app: ${{ fromJson(needs.detect.outputs.apps) }}
     uses: ./.github/workflows/sbom-builder.yml

@@ -1,3 +1,11 @@
+# SBOM workflow for R (Docker Official)
+#
+# Triggers when r-base config is updated.
+# Extracts SBOM from Docker OCI attestation (SPDX).
+# Also picked up by tea-sync hourly for image digest changes.
+#
+# https://hub.docker.com/_/r-base
+
 name: "SBOM: r-base"
 
 on:

@@ -1,3 +1,11 @@
+# SBOM workflow for Erlang (Docker Official)
+#
+# Triggers when erlang config is updated.
+# Extracts SBOM from Docker OCI attestation (SPDX).
+# Also picked up by tea-sync hourly for image digest changes.
+#
+# https://hub.docker.com/_/erlang
+
 name: "SBOM: erlang"
 
 on:

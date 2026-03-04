@@ -60,8 +60,9 @@ jobs:
           CRANE_BASE="https://github.com/google/go-containerregistry/releases/download/${{ env.CRANE_VERSION }}"
           curl -fsSL -o /tmp/crane.tar.gz "${CRANE_BASE}/go-containerregistry_Linux_x86_64.tar.gz"
           curl -fsSL -o /tmp/crane_checksums.txt "${CRANE_BASE}/checksums.txt"
-          grep go-containerregistry_Linux_x86_64.tar.gz /tmp/crane_checksums.txt \
-            | sed 's|go-containerregistry_Linux_x86_64.tar.gz|/tmp/crane.tar.gz|' \
+          checkline=$(grep go-containerregistry_Linux_x86_64.tar.gz /tmp/crane_checksums.txt)
+          [[ -n "$checkline" ]] || { echo "crane checksum line not found"; exit 1; }
+          echo "$checkline" | sed 's|go-containerregistry_Linux_x86_64.tar.gz|/tmp/crane.tar.gz|' \
             | sha256sum -c -
           tar -xzf /tmp/crane.tar.gz -C /tmp crane
           sudo install /tmp/crane /usr/local/bin/crane
@@ -70,8 +71,9 @@ jobs:
           COSIGN_BASE="https://github.com/sigstore/cosign/releases/download/${{ env.COSIGN_VERSION }}"
           curl -fsSL -o /tmp/cosign "${COSIGN_BASE}/cosign-linux-amd64"
           curl -fsSL -o /tmp/cosign_checksums.txt "${COSIGN_BASE}/cosign_checksums.txt"
-          grep 'cosign-linux-amd64$' /tmp/cosign_checksums.txt \
-            | sed 's|cosign-linux-amd64|/tmp/cosign|' \
+          checkline=$(grep 'cosign-linux-amd64$' /tmp/cosign_checksums.txt)
+          [[ -n "$checkline" ]] || { echo "cosign checksum line not found"; exit 1; }
+          echo "$checkline" | sed 's|cosign-linux-amd64|/tmp/cosign|' \
             | sha256sum -c -
           sudo install /tmp/cosign /usr/local/bin/cosign
 
@@ -107,7 +109,7 @@ jobs:
 
       - name: Cache fetched SBOM
         id: sbom-cache
-        if: steps.config.outputs.source_type != 'lockfile'
+        if: steps.config.outputs.source_type == 'github_release'
         uses: actions/cache@v4
         with:
           path: sbom.json
@@ -135,14 +137,17 @@ jobs:
             maven-${{ inputs.app }}-
             maven-
 
+      # Always fetch for docker/chainguard (image digest may change without version bump).
+      # Only skip for github_release/lockfile when cache hits.
       - name: Fetch SBOM or lockfile
         if: >-
-          (steps.sbom-cache.outputs.cache-hit != 'true' && steps.config.outputs.source_type != 'lockfile')
+          (steps.sbom-cache.outputs.cache-hit != 'true' && steps.config.outputs.source_type == 'github_release')
           || (steps.lockfile-cache.outputs.cache-hit != 'true' && steps.config.outputs.source_type == 'lockfile')
+          || (steps.config.outputs.source_type != 'github_release' && steps.config.outputs.source_type != 'lockfile')
         run: ./scripts/fetch-sbom.sh "${{ inputs.app }}"
 
       - name: Upload input artifact
-        if: always() && steps.config.outputs.source_type != 'lockfile'
+        if: always() && hashFiles('sbom.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}

@@ -1,3 +1,11 @@
+# SBOM workflow for Haskell (Docker Official)
+#
+# Triggers when haskell config is updated.
+# Extracts SBOM from Docker OCI attestation (SPDX).
+# Also picked up by tea-sync hourly for image digest changes.
+#
+# https://hub.docker.com/_/haskell
+
 name: "SBOM: haskell"
 
 on:
