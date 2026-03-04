@@ -1,0 +1,14 @@
+name: gradle
+version: "9.3.1"
+format: spdx
+
+source:
+  type: docker
+  image: "library/gradle"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "NFeEXrJeQhzV"
+  component_name: "Gradle"
+  product_id: "dUlDeFPnei19"

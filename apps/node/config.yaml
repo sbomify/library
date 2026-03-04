@@ -1,0 +1,14 @@
+name: node
+version: "25.0.0"
+format: spdx
+
+source:
+  type: docker
+  image: "library/node"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "tQJrbNKtQj9L"
+  component_name: "Node.js"
+  product_id: "uFOT9UPziTGy"

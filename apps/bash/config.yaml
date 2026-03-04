@@ -1,0 +1,14 @@
+name: bash
+version: "5.3.9"
+format: spdx
+
+source:
+  type: docker
+  image: "library/bash"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "hQs1ie0BWugp"
+  component_name: "Bash"
+  product_id: "QBQ0ynOS5ga8"

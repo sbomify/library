@@ -1,0 +1,14 @@
+name: mongo
+version: "8.2.5"
+format: spdx
+
+source:
+  type: docker
+  image: "library/mongo"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "jfHJIfP0HTsX"
+  component_name: "MongoDB"
+  product_id: "J8c7mLCgK3BZ"

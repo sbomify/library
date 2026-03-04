@@ -1,0 +1,14 @@
+name: sonarqube
+version: "26.2.0.119303-community"
+format: spdx
+
+source:
+  type: docker
+  image: "library/sonarqube"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "zxIeAhhucpbh"
+  component_name: "SonarQube"
+  product_id: "V7uHXOXLqEl9"

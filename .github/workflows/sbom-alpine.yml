@@ -1,0 +1,37 @@
+# SBOM workflow for Alpine Linux (Docker Official)
+#
+# Triggers when alpine config is updated.
+# Extracts SBOM from Docker OCI attestation (SPDX).
+# Also picked up by tea-sync hourly for image digest changes.
+#
+# https://hub.docker.com/_/alpine
+
+name: "SBOM: alpine"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/alpine/config.yaml'
+      - '.github/workflows/sbom-alpine.yml'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no upload)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/sbom-builder.yml
+    with:
+      app: alpine
+      dry_run: ${{ github.event.inputs.dry_run == 'true' }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write

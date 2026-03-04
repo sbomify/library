@@ -1,0 +1,14 @@
+name: eclipse-mosquitto
+version: "2.1.2"
+format: spdx
+
+source:
+  type: docker
+  image: "library/eclipse-mosquitto"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "RZxD3066UfHH"
+  component_name: "Eclipse Mosquitto"
+  product_id: "PLvRXXv1wTUk"

@@ -1,0 +1,14 @@
+name: eclipse-temurin
+version: "25.0.2_10-jdk-noble"
+format: spdx
+
+source:
+  type: docker
+  image: "library/eclipse-temurin"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "YCYSmunHvhOC"
+  component_name: "Eclipse Temurin"
+  product_id: "tez37LDqal20"

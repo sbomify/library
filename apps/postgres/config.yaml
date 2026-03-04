@@ -1,0 +1,14 @@
+name: postgres
+version: "18.3"
+format: spdx
+
+source:
+  type: docker
+  image: "library/postgres"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "VbYFnUbp6hb3"
+  component_name: "PostgreSQL"
+  product_id: "cb4bTPDhndj1"

@@ -1,0 +1,14 @@
+name: redis
+version: "8.6.1"
+format: spdx
+
+source:
+  type: docker
+  image: "library/redis"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "NtM9MiRLqcDH"
+  component_name: "Redis"
+  product_id: "uFfVy7vqchwy"

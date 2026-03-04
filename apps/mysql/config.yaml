@@ -1,0 +1,14 @@
+name: mysql
+version: "9.6.0"
+format: spdx
+
+source:
+  type: docker
+  image: "library/mysql"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "cK7BJXfnl4H3"
+  component_name: "MySQL"
+  product_id: "lKBb2t8mxkYK"

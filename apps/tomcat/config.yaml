@@ -1,0 +1,14 @@
+name: tomcat
+version: "11.0.18"
+format: spdx
+
+source:
+  type: docker
+  image: "library/tomcat"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "XtLqFhMUnfgf"
+  component_name: "Apache Tomcat"
+  product_id: "M2ZOFIt3JsfI"

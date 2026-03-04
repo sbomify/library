@@ -1,0 +1,14 @@
+name: ghost
+version: "6.20.0"
+format: spdx
+
+source:
+  type: docker
+  image: "library/ghost"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "pWgCahZC5xPp"
+  component_name: "Ghost"
+  product_id: "jp03nfwdWD3x"

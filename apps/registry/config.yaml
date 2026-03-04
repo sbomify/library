@@ -1,0 +1,14 @@
+name: registry
+version: "3.0.0"
+format: spdx
+
+source:
+  type: docker
+  image: "library/registry"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "pytZX4CKhijV"
+  component_name: "Docker Registry"
+  product_id: "eruyovtmbf1b"

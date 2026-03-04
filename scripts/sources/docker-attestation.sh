@@ -18,13 +18,29 @@ image_ref="${registry}/${image}:${version}"
 
 log_info "Extracting SBOM: $image_ref"
 
-manifest=$(crane manifest "$image_ref" --platform "$platform")
+# Get the image index (multi-arch manifest list)
+index=$(crane manifest "$image_ref")
 
-sbom_digest=$(echo "$manifest" | jq -r '
+# Find the platform-specific image digest
+IFS='/' read -r plat_os plat_arch <<< "$platform"
+image_digest=$(echo "$index" | jq -r --arg os "$plat_os" --arg arch "$plat_arch" '
+    .manifests[] |
+    select(.platform.os == $os and .platform.architecture == $arch) |
+    select(.annotations["vnd.docker.reference.type"] == null) |
+    .digest
+' | head -1)
+
+[[ -z "$image_digest" || "$image_digest" == "null" ]] && \
+    die "No image found for platform $platform"
+
+log_debug "Image digest: $image_digest"
+
+# Find the attestation manifest that references this image
+sbom_digest=$(echo "$index" | jq -r --arg ref "$image_digest" '
     .manifests[] |
     select(
-        (.annotations["vnd.docker.reference.type"] == "attestation-manifest") or
-        (.artifactType | contains("sbom") // false)
+        .annotations["vnd.docker.reference.type"] == "attestation-manifest" and
+        .annotations["vnd.docker.reference.digest"] == $ref
     ) | .digest
 ' | head -1)
 

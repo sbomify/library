@@ -1,0 +1,14 @@
+name: golang
+version: "1.26.0"
+format: spdx
+
+source:
+  type: docker
+  image: "library/golang"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "GkDDkMK1qe0q"
+  component_name: "Go"
+  product_id: "DPFjElH61z4A"

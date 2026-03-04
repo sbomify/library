@@ -1,0 +1,14 @@
+name: telegraf
+version: "1.37.0"
+format: spdx
+
+source:
+  type: docker
+  image: "library/telegraf"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "jYVZUIDeBJKr"
+  component_name: "Telegraf"
+  product_id: "phAZu64Y8F23"

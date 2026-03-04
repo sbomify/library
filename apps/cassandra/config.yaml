@@ -1,0 +1,14 @@
+name: cassandra
+version: "5.0.6"
+format: spdx
+
+source:
+  type: docker
+  image: "library/cassandra"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "oIuuNVmjtLAw"
+  component_name: "Apache Cassandra"
+  product_id: "oBLEReaXmhrB"

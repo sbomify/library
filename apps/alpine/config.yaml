@@ -1,0 +1,14 @@
+name: alpine
+version: "3.23.3"
+format: spdx
+
+source:
+  type: docker
+  image: "library/alpine"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "bKzgUrdak2jl"
+  component_name: "Alpine Linux"
+  product_id: "lR4o57FyDKzL"

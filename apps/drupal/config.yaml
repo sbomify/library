@@ -1,0 +1,14 @@
+name: drupal
+version: "11.3.3"
+format: spdx
+
+source:
+  type: docker
+  image: "library/drupal"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "SEaIu1TmpCe3"
+  component_name: "Drupal"
+  product_id: "Giyoic8Rsmr6"

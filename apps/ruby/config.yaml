@@ -1,0 +1,14 @@
+name: ruby
+version: "4.0.1"
+format: spdx
+
+source:
+  type: docker
+  image: "library/ruby"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "bz6hbPHK63OD"
+  component_name: "Ruby"
+  product_id: "TBHKte1ctfUn"

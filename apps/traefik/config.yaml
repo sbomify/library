@@ -1,0 +1,14 @@
+name: traefik
+version: "v3.6.9"
+format: spdx
+
+source:
+  type: docker
+  image: "library/traefik"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "vV4OdxZW9mIP"
+  component_name: "Traefik"
+  product_id: "a1xXrbBz2gEh"

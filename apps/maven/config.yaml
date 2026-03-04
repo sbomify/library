@@ -1,0 +1,14 @@
+name: maven
+version: "3.9.12"
+format: spdx
+
+source:
+  type: docker
+  image: "library/maven"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "flwpzhDMl0jj"
+  component_name: "Apache Maven"
+  product_id: "M8h8x9sA3Q30"

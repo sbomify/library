@@ -1,0 +1,14 @@
+name: wordpress
+version: "6.9.1"
+format: spdx
+
+source:
+  type: docker
+  image: "library/wordpress"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "eek2LwRJuPOu"
+  component_name: "WordPress"
+  product_id: "PEDCbk2wOhHW"

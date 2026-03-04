@@ -111,9 +111,10 @@ jobs:
           name: lockfile-${{ inputs.app }}-${{ steps.config.outputs.version }}
           path: ${{ steps.config.outputs.lockfile_path }}
 
+      # Phase 1: Build augmented SBOM locally (no upload)
       - name: Build SBOM (from existing SBOM)
         if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
-        uses: sbomify/github-action@master
+        uses: sbomify/sbomify-action@master
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
           COMPONENT_ID: ${{ steps.config.outputs.component_id }}
@@ -123,12 +124,11 @@ jobs:
           OUTPUT_FILE: sbom-output.json
           AUGMENT: true
           ENRICH: true
-          UPLOAD: ${{ !inputs.dry_run }}
-          PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+          UPLOAD: false
 
       - name: Build SBOM (from lockfile)
         if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
-        uses: sbomify/github-action@master
+        uses: sbomify/sbomify-action@master
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
           COMPONENT_ID: ${{ steps.config.outputs.component_id }}
@@ -138,7 +138,60 @@ jobs:
           OUTPUT_FILE: sbom-output.json
           AUGMENT: true
           ENRICH: true
-          UPLOAD: ${{ !inputs.dry_run }}
+          UPLOAD: false
+
+      # Phase 2: Check if this exact SBOM is already published
+      - name: Install uv
+        if: steps.config.outputs.component_id != '' && !inputs.dry_run
+        uses: astral-sh/setup-uv@v4
+
+      - name: Check TEA for existing SBOM
+        id: tea-check
+        if: steps.config.outputs.component_id != '' && !inputs.dry_run
+        run: |
+          sbom_hash=$(sha256sum sbom-output.json | cut -d' ' -f1)
+          echo "SBOM hash: $sbom_hash"
+          tei="urn:tei:hash:library.sbomify.com:sha256:${sbom_hash}"
+          echo "TEI: $tei"
+
+          result=$(uvx --from 'libtea[cli]' tea-cli discover "$tei" --json 2>/dev/null || true)
+          if [[ -z "$result" || "$result" == "[]" ]]; then
+            echo "SBOM not found on TEA, will upload"
+            echo "should_upload=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "SBOM already published on TEA, skipping upload"
+            echo "should_upload=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Phase 3: Upload only if SBOM is new
+      - name: Upload SBOM (from existing SBOM)
+        if: >-
+          steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
+          && !inputs.dry_run && steps.tea-check.outputs.should_upload == 'true'
+        uses: sbomify/sbomify-action@master
+        env:
+          TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
+          COMPONENT_ID: ${{ steps.config.outputs.component_id }}
+          COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
+          COMPONENT_VERSION: ${{ steps.config.outputs.version }}
+          SBOM_FILE: sbom-output.json
+          OUTPUT_FILE: sbom-final.json
+          UPLOAD: true
+          PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+
+      - name: Upload SBOM (from lockfile)
+        if: >-
+          steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
+          && !inputs.dry_run && steps.tea-check.outputs.should_upload == 'true'
+        uses: sbomify/sbomify-action@master
+        env:
+          TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
+          COMPONENT_ID: ${{ steps.config.outputs.component_id }}
+          COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
+          COMPONENT_VERSION: ${{ steps.config.outputs.version }}
+          SBOM_FILE: sbom-output.json
+          OUTPUT_FILE: sbom-final.json
+          UPLOAD: true
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
 
       - name: Upload output artifact
@@ -149,7 +202,9 @@ jobs:
           path: sbom-output.json
 
       - name: Attest SBOM provenance
-        if: steps.config.outputs.component_id != '' && !inputs.dry_run
+        if: >-
+          steps.config.outputs.component_id != '' && !inputs.dry_run
+          && steps.tea-check.outputs.should_upload == 'true'
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: sbom-output.json

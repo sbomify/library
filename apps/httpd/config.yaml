@@ -1,0 +1,14 @@
+name: httpd
+version: "2.4.66"
+format: spdx
+
+source:
+  type: docker
+  image: "library/httpd"
+  registry: "docker.io"
+  platform: "linux/amd64"
+
+sbomify:
+  component_id: "JOy3yCj7Grul"
+  component_name: "Apache HTTP Server"
+  product_id: "ruWTQE7GtEWu"
