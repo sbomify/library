@@ -103,9 +103,14 @@ jobs:
             echo "lockfile_path=" >> $GITHUB_OUTPUT
           fi
           PRODUCT_ID=$(yq -r '.sbomify.product_id // ""' "$CONFIG")
+          BUNDLE_PRODUCT_ID=$(yq -r '.sbomify.bundle_product_id // ""' "$CONFIG")
           echo "product_id=${PRODUCT_ID}" >> $GITHUB_OUTPUT
           if [[ -n "$PRODUCT_ID" && -n "$VERSION" ]]; then
-            echo "product_release=[\"${PRODUCT_ID}:${VERSION}\"]" >> $GITHUB_OUTPUT
+            RELEASE_ARRAY="\"${PRODUCT_ID}:${VERSION}\""
+            if [[ -n "$BUNDLE_PRODUCT_ID" ]]; then
+              RELEASE_ARRAY="${RELEASE_ARRAY},\"${BUNDLE_PRODUCT_ID}:${VERSION}\""
+            fi
+            echo "product_release=[${RELEASE_ARRAY}]" >> $GITHUB_OUTPUT
           fi
 
           # Build PURL for TEA dedup lookup

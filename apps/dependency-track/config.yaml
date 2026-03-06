@@ -20,5 +20,6 @@ source:
 sbomify:
   component_id: "hZSsrKGgp1ZP"
   component_name: "Dependency Track API Server"
-  product_id: "MoJ2O8FemjBc"
+  product_id: "rcTz13LAeJhO"
+  bundle_product_id: "MoJ2O8FemjBc"
 
