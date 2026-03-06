@@ -34,6 +34,7 @@ image_digest=$(echo "$index" | jq -r --arg os "$plat_os" --arg arch "$plat_arch"
     die "No image found for platform $platform"
 
 log_debug "Image digest: $image_digest"
+echo "$image_digest" > image-digest.txt
 
 # Find the attestation manifest that references this image
 sbom_digest=$(echo "$index" | jq -r --arg ref "$image_digest" '
