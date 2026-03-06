@@ -103,8 +103,14 @@ jobs:
             echo "lockfile_path=" >> $GITHUB_OUTPUT
           fi
           PRODUCT_ID=$(yq -r '.sbomify.product_id // ""' "$CONFIG")
+          BUNDLE_PRODUCT_ID=$(yq -r '.sbomify.bundle_product_id // ""' "$CONFIG")
+          echo "product_id=${PRODUCT_ID}" >> $GITHUB_OUTPUT
           if [[ -n "$PRODUCT_ID" && -n "$VERSION" ]]; then
-            echo "product_release=[\"${PRODUCT_ID}:${VERSION}\"]" >> $GITHUB_OUTPUT
+            RELEASE_ARRAY="\"${PRODUCT_ID}:${VERSION}\""
+            if [[ -n "$BUNDLE_PRODUCT_ID" ]]; then
+              RELEASE_ARRAY="${RELEASE_ARRAY},\"${BUNDLE_PRODUCT_ID}:${VERSION}\""
+            fi
+            echo "product_release=[${RELEASE_ARRAY}]" >> $GITHUB_OUTPUT
           fi
 
           # Build PURL for TEA dedup lookup
@@ -162,11 +168,25 @@ jobs:
           || (steps.config.outputs.source_type != 'github_release' && steps.config.outputs.source_type != 'lockfile')
         run: ./scripts/fetch-sbom.sh "${{ inputs.app }}"
 
+      - name: Read image digest
+        id: digest
+        if: >-
+          steps.config.outputs.source_type == 'docker'
+          || steps.config.outputs.source_type == 'chainguard'
+        run: |
+          if [[ ! -f image-digest.txt ]]; then
+            echo "::error::image-digest.txt not found"
+            exit 1
+          fi
+          digest=$(cat image-digest.txt)
+          echo "image_digest=${digest}" >> "$GITHUB_OUTPUT"
+          echo "image_digest_safe=${digest//:/-}" >> "$GITHUB_OUTPUT"
+
       - name: Upload input artifact
         if: always() && hashFiles('sbom.json') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-${{ inputs.app }}-${{ steps.config.outputs.version }}
+          name: sbom-${{ inputs.app }}-${{ steps.digest.outputs.image_digest_safe || steps.config.outputs.version }}
           path: sbom.json
 
       - name: Upload lockfile artifact
@@ -184,7 +204,7 @@ jobs:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
           COMPONENT_ID: ${{ steps.config.outputs.component_id }}
           COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
-          COMPONENT_VERSION: ${{ steps.config.outputs.version }}
+          COMPONENT_VERSION: ${{ steps.digest.outputs.image_digest || steps.config.outputs.version }}
           SBOM_FILE: sbom.json
           OUTPUT_FILE: sbom-output.json
           AUGMENT: true
@@ -233,11 +253,61 @@ jobs:
             echo "should_upload=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Check sbomify for existing digest
+        id: sbomify-check
+        if: >-
+          steps.config.outputs.component_id != '' && !inputs.dry_run
+          && (steps.config.outputs.source_type == 'docker'
+              || steps.config.outputs.source_type == 'chainguard')
+          && steps.config.outputs.product_id != ''
+        run: |
+          source scripts/lib/common.sh
+          source scripts/lib/sbomify-api.sh
+          if sbomify_digest_exists \
+              "${{ steps.config.outputs.product_id }}" \
+              "${{ steps.config.outputs.version }}" \
+              "${{ steps.config.outputs.component_id }}" \
+              "${{ steps.digest.outputs.image_digest }}"; then
+            echo "Digest already exists, skipping upload"
+            echo "should_upload=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New digest, will upload"
+            echo "should_upload=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          SBOMIFY_TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
+
+      - name: Resolve upload decision
+        id: upload-decision
+        if: steps.config.outputs.component_id != '' && !inputs.dry_run
+        run: |
+          src="${{ steps.config.outputs.source_type }}"
+          if [[ "$src" == "docker" || "$src" == "chainguard" ]]; then
+            echo "should_upload=${{ steps.sbomify-check.outputs.should_upload || 'true' }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_upload=${{ steps.tea-check.outputs.should_upload || 'true' }}" >> "$GITHUB_OUTPUT"
+          fi
+
       # Phase 3: Upload only if SBOM is new
       - name: Upload SBOM (from existing SBOM)
         if: >-
           steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
-          && !inputs.dry_run && steps.tea-check.outputs.should_upload == 'true'
+          && !inputs.dry_run && steps.upload-decision.outputs.should_upload == 'true'
+        uses: sbomify/sbomify-action@master
+        env:
+          TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
+          COMPONENT_ID: ${{ steps.config.outputs.component_id }}
+          COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
+          COMPONENT_VERSION: ${{ steps.digest.outputs.image_digest || steps.config.outputs.version }}
+          SBOM_FILE: sbom-output.json
+          OUTPUT_FILE: sbom-final.json
+          UPLOAD: true
+          PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+
+      - name: Upload SBOM (from lockfile)
+        if: >-
+          steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
+          && !inputs.dry_run && steps.upload-decision.outputs.should_upload == 'true'
         uses: sbomify/sbomify-action@master
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
@@ -249,20 +319,22 @@ jobs:
           UPLOAD: true
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
 
-      - name: Upload SBOM (from lockfile)
+      - name: Cleanup old release artifacts
         if: >-
-          steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
-          && !inputs.dry_run && steps.tea-check.outputs.should_upload == 'true'
-        uses: sbomify/sbomify-action@master
+          steps.config.outputs.product_id != '' && !inputs.dry_run
+          && steps.upload-decision.outputs.should_upload == 'true'
+          && (steps.config.outputs.source_type == 'docker'
+              || steps.config.outputs.source_type == 'chainguard')
+        run: |
+          source scripts/lib/common.sh
+          source scripts/lib/sbomify-api.sh
+          sbomify_cleanup_old_artifacts \
+            "${{ steps.config.outputs.product_id }}" \
+            "${{ steps.config.outputs.version }}" \
+            "${{ steps.config.outputs.component_id }}" \
+            "${{ steps.digest.outputs.image_digest }}"
         env:
-          TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
-          COMPONENT_ID: ${{ steps.config.outputs.component_id }}
-          COMPONENT_NAME: ${{ steps.config.outputs.component_name }}
-          COMPONENT_VERSION: ${{ steps.config.outputs.version }}
-          SBOM_FILE: sbom-output.json
-          OUTPUT_FILE: sbom-final.json
-          UPLOAD: true
-          PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
+          SBOMIFY_TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
 
       - name: Upload output artifact
         if: always()
@@ -274,7 +346,7 @@ jobs:
       - name: Attest SBOM provenance
         if: >-
           steps.config.outputs.component_id != '' && !inputs.dry_run
-          && steps.tea-check.outputs.should_upload == 'true'
+          && steps.upload-decision.outputs.should_upload == 'true'
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: sbom-output.json

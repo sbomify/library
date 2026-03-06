@@ -17,6 +17,11 @@ platform=$(get_config "$app" ".source.platform" "linux/amd64")
 image_ref="${registry}/${image}:${version}"
 
 log_info "Downloading attestation: $image_ref"
+
+image_digest=$(crane digest --platform "$platform" "$image_ref")
+echo "$image_digest" > image-digest.txt
+log_info "Image digest: $image_digest"
+
 cosign download attestation \
     --platform "$platform" \
     --predicate-type="https://spdx.dev/Document" \

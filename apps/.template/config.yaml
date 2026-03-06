@@ -65,4 +65,7 @@ sbomify:
   # Optional: Product ID for release tagging (if this component is part of a product)
   # When set, the SBOM will be tagged with "product_id:version"
   # product_id: "your-product-id"
+  # Optional: Bundle product ID (if this component also belongs to a multi-component bundle)
+  # When set, the SBOM will be tagged with both product releases
+  # bundle_product_id: "your-bundle-product-id"
 
