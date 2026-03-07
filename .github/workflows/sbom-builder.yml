@@ -259,13 +259,10 @@ jobs:
           steps.config.outputs.component_id != '' && !inputs.dry_run
           && (steps.config.outputs.source_type == 'docker'
               || steps.config.outputs.source_type == 'chainguard')
-          && steps.config.outputs.product_id != ''
         run: |
           source scripts/lib/common.sh
           source scripts/lib/sbomify-api.sh
           if sbomify_digest_exists \
-              "${{ steps.config.outputs.product_id }}" \
-              "${{ steps.config.outputs.version }}" \
               "${{ steps.config.outputs.component_id }}" \
               "${{ steps.digest.outputs.image_digest }}"; then
             echo "Digest already exists, skipping upload"
@@ -319,18 +316,16 @@ jobs:
           UPLOAD: true
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
 
-      - name: Cleanup old release artifacts
+      - name: Cleanup old SBOMs
         if: >-
-          steps.config.outputs.product_id != '' && !inputs.dry_run
+          steps.config.outputs.component_id != '' && !inputs.dry_run
           && steps.upload-decision.outputs.should_upload == 'true'
           && (steps.config.outputs.source_type == 'docker'
               || steps.config.outputs.source_type == 'chainguard')
         run: |
           source scripts/lib/common.sh
           source scripts/lib/sbomify-api.sh
-          sbomify_cleanup_old_artifacts \
-            "${{ steps.config.outputs.product_id }}" \
-            "${{ steps.config.outputs.version }}" \
+          sbomify_cleanup_old_sboms \
             "${{ steps.config.outputs.component_id }}" \
             "${{ steps.digest.outputs.image_digest }}"
         env:

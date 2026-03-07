@@ -10,53 +10,33 @@ set -euo pipefail
 
 SBOMIFY_API="${SBOMIFY_API_URL:-https://app.sbomify.com}"
 
-# Check if a release artifact already has this digest version
-# Usage: sbomify_digest_exists <product_id> <tag_version> <component_id> <digest>
+# Check if a component already has an SBOM with this digest as version
+# Usage: sbomify_digest_exists <component_id> <digest>
 # Returns: 0 if exists, 1 if not
 sbomify_digest_exists() {
-    local product_id="$1" tag_version="$2" component_id="$3" digest="$4"
+    local component_id="$1" digest="$2"
 
-    # Find the release
-    local releases release_id
-    releases=$(curl -fsSL -H "Authorization: Bearer ${SBOMIFY_TOKEN}" \
-        "${SBOMIFY_API}/api/v1/releases?product_id=${product_id}&version=${tag_version}")
-    release_id=$(echo "$releases" | jq -r --arg v "$tag_version" \
-        '.items[] | select(.version == $v) | .id' | head -1)
-
-    [[ -z "$release_id" ]] && return 1  # No release → digest doesn't exist
-
-    # Check artifacts for matching digest
-    local artifacts
-    artifacts=$(curl -fsSL -H "Authorization: Bearer ${SBOMIFY_TOKEN}" \
-        "${SBOMIFY_API}/api/v1/releases/${release_id}/artifacts?mode=existing")
-    echo "$artifacts" | jq -e --arg cid "$component_id" --arg d "$digest" \
-        '.items[] | select(.component_id == $cid and .sbom_version == $d)' > /dev/null 2>&1
+    local sboms
+    sboms=$(curl -fsSL -H "Authorization: Bearer ${SBOMIFY_TOKEN}" \
+        "${SBOMIFY_API}/api/v1/components/${component_id}/sboms")
+    echo "$sboms" | jq -e --arg d "$digest" \
+        '.items[] | select(.sbom.version == $d)' > /dev/null 2>&1
 }
 
-# Remove old artifacts for a component from a release (keep only current digest)
-# Usage: sbomify_cleanup_old_artifacts <product_id> <tag_version> <component_id> <current_digest>
-sbomify_cleanup_old_artifacts() {
-    local product_id="$1" tag_version="$2" component_id="$3" current_digest="$4"
+# Remove old SBOMs for a component (keep only current digest)
+# Usage: sbomify_cleanup_old_sboms <component_id> <current_digest>
+sbomify_cleanup_old_sboms() {
+    local component_id="$1" current_digest="$2"
 
-    # Find the release
-    local releases release_id
-    releases=$(curl -fsSL -H "Authorization: Bearer ${SBOMIFY_TOKEN}" \
-        "${SBOMIFY_API}/api/v1/releases?product_id=${product_id}&version=${tag_version}")
-    release_id=$(echo "$releases" | jq -r --arg v "$tag_version" \
-        '.items[] | select(.version == $v) | .id' | head -1)
+    local sboms old_ids
+    sboms=$(curl -fsSL -H "Authorization: Bearer ${SBOMIFY_TOKEN}" \
+        "${SBOMIFY_API}/api/v1/components/${component_id}/sboms")
+    old_ids=$(echo "$sboms" | jq -r --arg d "$current_digest" \
+        '.items[] | select(.sbom.version != $d) | .sbom.id')
 
-    [[ -z "$release_id" ]] && return 0  # No release → nothing to clean
-
-    # Find old artifacts for this component with different digest
-    local old_ids
-    old_ids=$(curl -fsSL -H "Authorization: Bearer ${SBOMIFY_TOKEN}" \
-        "${SBOMIFY_API}/api/v1/releases/${release_id}/artifacts?mode=existing" | \
-        jq -r --arg cid "$component_id" --arg d "$current_digest" \
-        '.items[] | select(.component_id == $cid and .sbom_version != $d) | .id')
-
-    for artifact_id in $old_ids; do
-        log_info "Removing old artifact ${artifact_id} from release ${release_id}"
+    for sbom_id in $old_ids; do
+        log_info "Removing old SBOM ${sbom_id} from component ${component_id}"
         curl -fsSL -X DELETE -H "Authorization: Bearer ${SBOMIFY_TOKEN}" \
-            "${SBOMIFY_API}/api/v1/releases/${release_id}/artifacts/${artifact_id}"
+            "${SBOMIFY_API}/api/v1/sboms/sbom/${sbom_id}" || true
     done
 }
