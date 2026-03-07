@@ -113,20 +113,28 @@ jobs:
             echo "product_release=[${RELEASE_ARRAY}]" >> $GITHUB_OUTPUT
           fi
 
-          # Build PURL for TEA dedup lookup
+          # Build PURLs for TEA dedup and component PURL
           SOURCE_TYPE=$(yq -r '.source.type // ""' "$CONFIG")
           IMAGE=$(yq -r '.source.image // ""' "$CONFIG")
           REGISTRY=$(yq -r '.source.registry // ""' "$CONFIG")
           REPO=$(yq -r '.source.repo // ""' "$CONFIG")
           case "$SOURCE_TYPE" in
             docker)
-              echo "purl=pkg:docker/${IMAGE}@${VERSION}" >> "$GITHUB_OUTPUT" ;;
+              echo "purl=pkg:docker/${IMAGE}@${VERSION}" >> "$GITHUB_OUTPUT"
+              echo "purl_base=pkg:docker/${IMAGE}" >> "$GITHUB_OUTPUT"
+              ;;
             chainguard)
-              echo "purl=pkg:oci/${REGISTRY}/${IMAGE}@${VERSION}" >> "$GITHUB_OUTPUT" ;;
+              echo "purl=pkg:oci/${REGISTRY}/${IMAGE}@${VERSION}" >> "$GITHUB_OUTPUT"
+              echo "purl_base=pkg:oci/${REGISTRY}/${IMAGE}" >> "$GITHUB_OUTPUT"
+              ;;
             github_release|lockfile)
-              echo "purl=pkg:github/${REPO}@${VERSION}" >> "$GITHUB_OUTPUT" ;;
+              echo "purl=pkg:github/${REPO}@${VERSION}" >> "$GITHUB_OUTPUT"
+              echo "purl_base=pkg:github/${REPO}" >> "$GITHUB_OUTPUT"
+              ;;
             *)
-              echo "purl=" >> "$GITHUB_OUTPUT" ;;
+              echo "purl=" >> "$GITHUB_OUTPUT"
+              echo "purl_base=" >> "$GITHUB_OUTPUT"
+              ;;
           esac
 
       - name: Cache fetched SBOM
@@ -181,6 +189,8 @@ jobs:
           digest=$(cat image-digest.txt)
           echo "image_digest=${digest}" >> "$GITHUB_OUTPUT"
           echo "image_digest_safe=${digest//:/-}" >> "$GITHUB_OUTPUT"
+          purl_base="${{ steps.config.outputs.purl_base }}"
+          echo "component_purl=${purl_base}@${digest}" >> "$GITHUB_OUTPUT"
 
       - name: Upload input artifact
         if: always() && hashFiles('sbom.json') != ''
@@ -200,6 +210,8 @@ jobs:
       - name: Build SBOM (from existing SBOM)
         if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
         uses: sbomify/sbomify-action@master
+        with:
+          component-purl: ${{ steps.digest.outputs.component_purl || steps.config.outputs.purl }}
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
           COMPONENT_ID: ${{ steps.config.outputs.component_id }}
@@ -214,6 +226,8 @@ jobs:
       - name: Build SBOM (from lockfile)
         if: steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
         uses: sbomify/sbomify-action@master
+        with:
+          component-purl: ${{ steps.config.outputs.purl }}
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
           COMPONENT_ID: ${{ steps.config.outputs.component_id }}
@@ -291,6 +305,8 @@ jobs:
           steps.config.outputs.component_id != '' && steps.config.outputs.source_type != 'lockfile'
           && !inputs.dry_run && steps.upload-decision.outputs.should_upload == 'true'
         uses: sbomify/sbomify-action@master
+        with:
+          component-purl: ${{ steps.digest.outputs.component_purl || steps.config.outputs.purl }}
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
           COMPONENT_ID: ${{ steps.config.outputs.component_id }}
@@ -306,6 +322,8 @@ jobs:
           steps.config.outputs.component_id != '' && steps.config.outputs.source_type == 'lockfile'
           && !inputs.dry_run && steps.upload-decision.outputs.should_upload == 'true'
         uses: sbomify/sbomify-action@master
+        with:
+          component-purl: ${{ steps.config.outputs.purl }}
         env:
           TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
           COMPONENT_ID: ${{ steps.config.outputs.component_id }}
@@ -316,10 +334,9 @@ jobs:
           UPLOAD: true
           PRODUCT_RELEASE: ${{ steps.config.outputs.product_release }}
 
-      - name: Cleanup old SBOMs
+      - name: Cleanup old SBOMs and releases
         if: >-
           steps.config.outputs.component_id != '' && !inputs.dry_run
-          && steps.upload-decision.outputs.should_upload == 'true'
           && (steps.config.outputs.source_type == 'docker'
               || steps.config.outputs.source_type == 'chainguard')
         run: |
@@ -328,6 +345,10 @@ jobs:
           sbomify_cleanup_old_sboms \
             "${{ steps.config.outputs.component_id }}" \
             "${{ steps.digest.outputs.image_digest }}"
+          if [[ -n "${{ steps.config.outputs.product_id }}" ]]; then
+            sbomify_cleanup_versioned_releases \
+              "${{ steps.config.outputs.product_id }}"
+          fi
         env:
           SBOMIFY_TOKEN: ${{ secrets.SBOMIFY_TOKEN }}
 

@@ -40,3 +40,21 @@ sbomify_cleanup_old_sboms() {
             "${SBOMIFY_API}/api/v1/sboms/sbom/${sbom_id}" || true
     done
 }
+
+# Remove versioned releases from a product (keep only "latest")
+# Usage: sbomify_cleanup_versioned_releases <product_id>
+sbomify_cleanup_versioned_releases() {
+    local product_id="$1"
+
+    local releases release_ids
+    releases=$(curl -fsSL -H "Authorization: Bearer ${SBOMIFY_TOKEN}" \
+        "${SBOMIFY_API}/api/v1/releases?product_id=${product_id}")
+    release_ids=$(echo "$releases" | jq -r \
+        '.items[] | select(.is_latest != true) | .id')
+
+    for release_id in $release_ids; do
+        log_info "Removing versioned release ${release_id} from product ${product_id}"
+        curl -fsSL -X DELETE -H "Authorization: Bearer ${SBOMIFY_TOKEN}" \
+            "${SBOMIFY_API}/api/v1/releases/${release_id}" || true
+    done
+}
