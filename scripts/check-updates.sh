@@ -163,7 +163,7 @@ get_latest_docker_version() {
     local registry image current platform
     registry=$(get_config "$app" ".source.registry" "docker.io")
     image=$(get_config "$app" ".source.image")
-    platform=$(get_config "$app" ".source.platform" "linux/amd64")
+    platform="linux/amd64"
     current=$(yq -r '.version' "${APPS_DIR}/${app}/config.yaml")
 
     local image_ref="${registry}/${image}:latest"
