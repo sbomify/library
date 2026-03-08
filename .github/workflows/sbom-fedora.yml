@@ -9,13 +9,6 @@
 name: "SBOM: fedora"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/fedora/config.yaml'
-      - '.github/workflows/sbom-fedora.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

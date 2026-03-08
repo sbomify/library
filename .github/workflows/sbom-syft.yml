@@ -8,13 +8,6 @@
 name: "SBOM: syft"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/syft/config.yaml'
-      - '.github/workflows/sbom-syft.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

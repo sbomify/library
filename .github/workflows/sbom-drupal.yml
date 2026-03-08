@@ -9,13 +9,6 @@
 name: "SBOM: drupal"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/drupal/config.yaml'
-      - '.github/workflows/sbom-drupal.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

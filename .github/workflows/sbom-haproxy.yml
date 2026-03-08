@@ -9,13 +9,6 @@
 name: "SBOM: haproxy"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/haproxy/config.yaml'
-      - '.github/workflows/sbom-haproxy.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

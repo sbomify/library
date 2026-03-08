@@ -9,13 +9,6 @@
 name: "SBOM: tomcat"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/tomcat/config.yaml'
-      - '.github/workflows/sbom-tomcat.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

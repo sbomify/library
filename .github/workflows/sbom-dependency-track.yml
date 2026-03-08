@@ -8,13 +8,6 @@
 name: "SBOM: dependency-track"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/dependency-track/config.yaml'
-      - '.github/workflows/sbom-dependency-track.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

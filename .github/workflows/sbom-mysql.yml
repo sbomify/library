@@ -9,13 +9,6 @@
 name: "SBOM: mysql"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/mysql/config.yaml'
-      - '.github/workflows/sbom-mysql.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

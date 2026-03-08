@@ -9,13 +9,6 @@
 name: "SBOM: cassandra"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/cassandra/config.yaml'
-      - '.github/workflows/sbom-cassandra.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

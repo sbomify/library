@@ -9,13 +9,6 @@
 name: "SBOM: elixir"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/elixir/config.yaml'
-      - '.github/workflows/sbom-elixir.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

@@ -9,13 +9,6 @@
 name: "SBOM: python"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/python/config.yaml'
-      - '.github/workflows/sbom-python.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

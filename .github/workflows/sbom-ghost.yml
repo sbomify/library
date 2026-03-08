@@ -9,13 +9,6 @@
 name: "SBOM: ghost"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/ghost/config.yaml'
-      - '.github/workflows/sbom-ghost.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

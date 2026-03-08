@@ -9,13 +9,6 @@
 name: "SBOM: zookeeper"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/zookeeper/config.yaml'
-      - '.github/workflows/sbom-zookeeper.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

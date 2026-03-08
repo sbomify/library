@@ -9,13 +9,6 @@
 name: "SBOM: registry"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/registry/config.yaml'
-      - '.github/workflows/sbom-registry.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

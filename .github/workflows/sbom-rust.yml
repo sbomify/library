@@ -9,13 +9,6 @@
 name: "SBOM: rust"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/rust/config.yaml'
-      - '.github/workflows/sbom-rust.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

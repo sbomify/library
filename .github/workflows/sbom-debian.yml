@@ -9,13 +9,6 @@
 name: "SBOM: debian"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/debian/config.yaml'
-      - '.github/workflows/sbom-debian.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

@@ -9,13 +9,6 @@
 name: "SBOM: oraclelinux"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/oraclelinux/config.yaml'
-      - '.github/workflows/sbom-oraclelinux.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

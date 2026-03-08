@@ -8,13 +8,6 @@
 name: "SBOM: dependency-track-frontend"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/dependency-track-frontend/config.yaml'
-      - '.github/workflows/sbom-dependency-track-frontend.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

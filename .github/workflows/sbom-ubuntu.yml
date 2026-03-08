@@ -9,13 +9,6 @@
 name: "SBOM: ubuntu"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/ubuntu/config.yaml'
-      - '.github/workflows/sbom-ubuntu.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

@@ -9,13 +9,6 @@
 name: "SBOM: memcached"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/memcached/config.yaml'
-      - '.github/workflows/sbom-memcached.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

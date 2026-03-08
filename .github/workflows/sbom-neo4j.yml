@@ -9,13 +9,6 @@
 name: "SBOM: neo4j"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/neo4j/config.yaml'
-      - '.github/workflows/sbom-neo4j.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

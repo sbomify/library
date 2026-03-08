@@ -9,13 +9,6 @@
 name: "SBOM: bash"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/bash/config.yaml'
-      - '.github/workflows/sbom-bash.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

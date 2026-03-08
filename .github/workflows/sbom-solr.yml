@@ -9,13 +9,6 @@
 name: "SBOM: solr"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/solr/config.yaml'
-      - '.github/workflows/sbom-solr.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

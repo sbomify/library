@@ -8,13 +8,6 @@
 name: "SBOM: caddy"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/caddy/config.yaml'
-      - '.github/workflows/sbom-caddy.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

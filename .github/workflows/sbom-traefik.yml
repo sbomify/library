@@ -9,13 +9,6 @@
 name: "SBOM: traefik"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/traefik/config.yaml'
-      - '.github/workflows/sbom-traefik.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

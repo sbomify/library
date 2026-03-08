@@ -9,13 +9,6 @@
 name: "SBOM: kong"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/kong/config.yaml'
-      - '.github/workflows/sbom-kong.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

@@ -5,14 +5,6 @@
 name: "SBOM: osv-scanner"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/osv-scanner/config.yaml'
-      - '.github/workflows/sbom-osv-scanner.yml'
-
-  # Allow manual triggering
   workflow_dispatch:
     inputs:
       dry_run:

@@ -9,13 +9,6 @@
 name: "SBOM: rockylinux"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/rockylinux/config.yaml'
-      - '.github/workflows/sbom-rockylinux.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

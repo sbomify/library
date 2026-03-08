@@ -9,13 +9,6 @@
 name: "SBOM: amazonlinux"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/amazonlinux/config.yaml'
-      - '.github/workflows/sbom-amazonlinux.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

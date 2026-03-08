@@ -9,13 +9,6 @@
 name: "SBOM: influxdb"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/influxdb/config.yaml'
-      - '.github/workflows/sbom-influxdb.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:
