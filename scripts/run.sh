@@ -272,7 +272,7 @@ process_app() {
     fi
 
     log_info "Building augmented SBOM..."
-    env "${sbomify_env[@]}" uvx --from sbomify-action sbomify-action
+    ( cd "$work_dir" && env "${sbomify_env[@]}" uvx --from sbomify-action sbomify-action )
 
     # -------------------------------------------------------------------------
     # Step 4: Dedup check
@@ -342,7 +342,7 @@ process_app() {
             upload_env+=("PRODUCT_RELEASE=${product_release}")
         fi
 
-        env "${upload_env[@]}" uvx --from sbomify-action sbomify-action
+        ( cd "$work_dir" && env "${upload_env[@]}" uvx --from sbomify-action sbomify-action )
         log_info "Upload complete for $app"
     else
         log_info "Skipping upload for $app (already exists)"
