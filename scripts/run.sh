@@ -252,7 +252,7 @@ process_app() {
         "COMPONENT_PURL=${component_purl}"
         "OUTPUT_FILE=${work_dir}/sbom-output.json"
         "AUGMENT=true"
-        "ENRICH=true"
+        "ENRICH=false"
         "UPLOAD=false"
     )
 
@@ -334,6 +334,8 @@ process_app() {
             "COMPONENT_PURL=${component_purl}"
             "SBOM_FILE=${work_dir}/sbom-output.json"
             "OUTPUT_FILE=${work_dir}/sbom-final.json"
+            "AUGMENT=false"
+            "ENRICH=false"
             "UPLOAD=true"
         )
         if [[ -n "$product_release" ]]; then
