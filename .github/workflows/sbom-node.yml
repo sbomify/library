@@ -9,13 +9,6 @@
 name: "SBOM: node"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/node/config.yaml'
-      - '.github/workflows/sbom-node.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

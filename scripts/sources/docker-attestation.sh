@@ -13,7 +13,7 @@ app="$1"
 version=$(get_latest_version "$app")
 registry=$(get_config "$app" ".source.registry" "docker.io")
 image=$(get_config "$app" ".source.image")
-platform=$(get_config "$app" ".source.platform" "linux/amd64")
+platform="linux/amd64"
 image_ref="${registry}/${image}:${version}"
 
 log_info "Extracting SBOM: $image_ref"

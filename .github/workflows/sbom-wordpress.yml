@@ -9,13 +9,6 @@
 name: "SBOM: wordpress"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/wordpress/config.yaml'
-      - '.github/workflows/sbom-wordpress.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

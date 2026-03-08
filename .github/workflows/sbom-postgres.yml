@@ -9,13 +9,6 @@
 name: "SBOM: postgres"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/postgres/config.yaml'
-      - '.github/workflows/sbom-postgres.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

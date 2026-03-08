@@ -9,13 +9,6 @@
 name: "SBOM: ruby"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/ruby/config.yaml'
-      - '.github/workflows/sbom-ruby.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

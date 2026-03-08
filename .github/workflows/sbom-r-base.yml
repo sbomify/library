@@ -9,13 +9,6 @@
 name: "SBOM: r-base"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/r-base/config.yaml'
-      - '.github/workflows/sbom-r-base.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

@@ -9,13 +9,6 @@
 name: "SBOM: php"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/php/config.yaml'
-      - '.github/workflows/sbom-php.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

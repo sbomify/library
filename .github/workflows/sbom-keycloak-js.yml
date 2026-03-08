@@ -8,13 +8,6 @@
 name: "SBOM: keycloak-js"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/keycloak-js/config.yaml'
-      - '.github/workflows/sbom-keycloak-js.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

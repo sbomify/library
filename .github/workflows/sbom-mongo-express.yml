@@ -9,13 +9,6 @@
 name: "SBOM: mongo-express"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/mongo-express/config.yaml'
-      - '.github/workflows/sbom-mongo-express.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

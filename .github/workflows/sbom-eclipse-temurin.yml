@@ -9,13 +9,6 @@
 name: "SBOM: eclipse-temurin"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/eclipse-temurin/config.yaml'
-      - '.github/workflows/sbom-eclipse-temurin.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

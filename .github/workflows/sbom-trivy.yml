@@ -8,13 +8,6 @@
 name: "SBOM: trivy"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/trivy/config.yaml'
-      - '.github/workflows/sbom-trivy.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

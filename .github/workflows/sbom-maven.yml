@@ -9,13 +9,6 @@
 name: "SBOM: maven"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/maven/config.yaml'
-      - '.github/workflows/sbom-maven.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

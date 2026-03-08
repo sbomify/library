@@ -26,19 +26,26 @@ sbomify SBOM Library — automates Software Bill of Materials (SBOM) extraction 
 ## Common Commands
 
 ```bash
-# Fetch SBOM for an app
+# Run full SBOM pipeline for an app (fetch, build, dedup, upload)
+./scripts/run.sh <app-name>
+./scripts/run.sh <app-name> --dry-run
+./scripts/run.sh --all
+./scripts/run.sh --all --parallel 5
+./scripts/run.sh --type docker
+./scripts/run.sh --app redis,trivy
+
+# Fetch SBOM only (no augment/upload)
 ./scripts/fetch-sbom.sh <app-name>
 
-# Dry-run (no actual fetch/upload)
-./scripts/fetch-sbom.sh <app-name> --dry-run
-
 # Debug logging
-LOG_LEVEL=DEBUG ./scripts/fetch-sbom.sh <app-name>
+LOG_LEVEL=DEBUG ./scripts/run.sh <app-name>
 
 # Lint
 shellcheck scripts/**/*.sh
 yamllint .
 ```
+
+> **Note:** Per-app workflow triggers (`sbom-*.yml`) are disabled (dispatch-only). Use `run.sh` for local execution. The lint workflow remains active on PRs.
 
 ## Adding a New App
 

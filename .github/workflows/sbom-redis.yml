@@ -9,13 +9,6 @@
 name: "SBOM: redis"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/redis/config.yaml'
-      - '.github/workflows/sbom-redis.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

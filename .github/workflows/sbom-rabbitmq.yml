@@ -9,13 +9,6 @@
 name: "SBOM: rabbitmq"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/rabbitmq/config.yaml'
-      - '.github/workflows/sbom-rabbitmq.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

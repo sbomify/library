@@ -9,13 +9,6 @@
 name: "SBOM: nginx"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/nginx/config.yaml'
-      - '.github/workflows/sbom-nginx.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

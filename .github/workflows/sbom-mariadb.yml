@@ -9,13 +9,6 @@
 name: "SBOM: mariadb"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/mariadb/config.yaml'
-      - '.github/workflows/sbom-mariadb.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

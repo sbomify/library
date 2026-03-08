@@ -9,13 +9,6 @@
 name: "SBOM: erlang"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/erlang/config.yaml'
-      - '.github/workflows/sbom-erlang.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

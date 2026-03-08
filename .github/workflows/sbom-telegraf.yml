@@ -9,13 +9,6 @@
 name: "SBOM: telegraf"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/telegraf/config.yaml'
-      - '.github/workflows/sbom-telegraf.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

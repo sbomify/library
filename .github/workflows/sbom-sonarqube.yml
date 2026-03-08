@@ -9,13 +9,6 @@
 name: "SBOM: sonarqube"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/sonarqube/config.yaml'
-      - '.github/workflows/sbom-sonarqube.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

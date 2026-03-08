@@ -9,13 +9,6 @@
 name: "SBOM: alpine"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/alpine/config.yaml'
-      - '.github/workflows/sbom-alpine.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

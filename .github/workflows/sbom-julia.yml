@@ -9,13 +9,6 @@
 name: "SBOM: julia"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/julia/config.yaml'
-      - '.github/workflows/sbom-julia.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

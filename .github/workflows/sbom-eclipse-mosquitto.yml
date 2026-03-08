@@ -9,13 +9,6 @@
 name: "SBOM: eclipse-mosquitto"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/eclipse-mosquitto/config.yaml'
-      - '.github/workflows/sbom-eclipse-mosquitto.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

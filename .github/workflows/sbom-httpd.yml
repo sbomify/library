@@ -9,13 +9,6 @@
 name: "SBOM: httpd"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/httpd/config.yaml'
-      - '.github/workflows/sbom-httpd.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

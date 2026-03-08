@@ -9,13 +9,6 @@
 name: "SBOM: gradle"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/gradle/config.yaml'
-      - '.github/workflows/sbom-gradle.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

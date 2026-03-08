@@ -9,13 +9,6 @@
 name: "SBOM: perl"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/perl/config.yaml'
-      - '.github/workflows/sbom-perl.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:

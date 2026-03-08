@@ -9,13 +9,6 @@
 name: "SBOM: haskell"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'apps/haskell/config.yaml'
-      - '.github/workflows/sbom-haskell.yml'
-
   workflow_dispatch:
     inputs:
       dry_run:
