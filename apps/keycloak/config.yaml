@@ -17,8 +17,6 @@ source:
   lockfile: "quarkus/runtime/pom.xml"
   tag_prefix: ""
   clone: true
-  post_clone_commands:
-    - "./mvnw clean install -DskipTestsuite -DskipExamples -DskipTests"
 
 sbomify:
   component_id: "GYsnuXarUapb"

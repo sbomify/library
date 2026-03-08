@@ -24,6 +24,21 @@ source "${SCRIPT_DIR}/lib/common.sh"
 # shellcheck source=lib/sbomify-api.sh
 source "${SCRIPT_DIR}/lib/sbomify-api.sh"
 
+# Add fnm-managed node to PATH (needed for cdxgen in lockfile sources)
+if [[ -d "${HOME}/.local/share/fnm" ]]; then
+    export PATH="${HOME}/.local/share/fnm:${PATH}"
+    eval "$(fnm env 2>/dev/null)" 2>/dev/null || true
+fi
+
+# Add local JDK and Maven to PATH if present (needed for Maven/Gradle lockfile sources)
+if [[ -d "${HOME}/.local/jdk/bin" ]]; then
+    export JAVA_HOME="${HOME}/.local/jdk"
+    export PATH="${JAVA_HOME}/bin:${PATH}"
+fi
+if [[ -d "${HOME}/.local/maven/bin" ]]; then
+    export PATH="${HOME}/.local/maven/bin:${PATH}"
+fi
+
 # =============================================================================
 # Constants
 # =============================================================================
@@ -195,11 +210,12 @@ process_app() {
 
     validate_app_dir "$app"
 
-    local source_type version component_id component_name
+    local source_type version component_id component_name sbom_format
     source_type=$(get_source_type "$app")
     version=$(get_latest_version "$app")
     component_id=$(get_sbomify_component_id "$app")
     component_name=$(get_config "$app" ".sbomify.component_name" "")
+    sbom_format=$(get_config "$app" ".format" "cyclonedx")
 
     log_info "=== Processing: $app v${version} (${source_type}) ==="
 
@@ -271,8 +287,58 @@ process_app() {
         sbomify_env+=("SBOM_FILE=${work_dir}/sbom.json")
     fi
 
+    # Sanitize invalid SPDX license expressions before augmentation
+    if [[ "$sbom_format" == "spdx" && -f "${work_dir}/sbom.json" ]]; then
+        python3 -c "
+import json, sys, re
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+changed = 0
+for pkg in data.get('packages', []):
+    for field in ('licenseDeclared', 'licenseConcluded'):
+        val = pkg.get(field, '')
+        if val and val not in ('NOASSERTION', 'NONE'):
+            # Replace invalid license expressions with NOASSERTION
+            if re.search(r'[^A-Za-z0-9_.+\-\s()\/]', val) or '(the ' in val.lower() or '(tests ' in val.lower():
+                pkg[field] = 'NOASSERTION'
+                changed += 1
+if changed:
+    with open(sys.argv[1], 'w') as f:
+        json.dump(data, f)
+    print(f'Sanitized {changed} invalid license expression(s)', file=sys.stderr)
+" "${work_dir}/sbom.json" 2>&1 | while read -r line; do log_info "$line"; done
+    fi
+
     log_info "Building augmented SBOM..."
     ( cd "$work_dir" && env "${sbomify_env[@]}" uvx --from sbomify-action sbomify-action )
+
+    # -------------------------------------------------------------------------
+    # Step 3b: Strip file-level data from SPDX SBOMs
+    # -------------------------------------------------------------------------
+    # Docker/chainguard SPDX SBOMs include per-file entries that can be 10MB+.
+    # The sbomify API has a body size limit, so we strip files and file-level
+    # relationships to keep the upload under the limit while preserving all
+    # package-level data.
+    if [[ "$sbom_format" == "spdx" && -f "${work_dir}/sbom-output.json" ]]; then
+        local original_size stripped_size
+        original_size=$(stat -c%s "${work_dir}/sbom-output.json")
+        if [[ $original_size -gt 2000000 ]]; then
+            log_info "Stripping file-level data from SPDX SBOM ($(( original_size / 1024 / 1024 ))MB)..."
+            python3 -c "
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+data['files'] = []
+data['relationships'] = [r for r in data.get('relationships', [])
+    if not r.get('spdxElementId', '').startswith('SPDXRef-File')
+    and not r.get('relatedSpdxElement', '').startswith('SPDXRef-File')]
+with open(sys.argv[1], 'w') as f:
+    json.dump(data, f)
+" "${work_dir}/sbom-output.json"
+            stripped_size=$(stat -c%s "${work_dir}/sbom-output.json")
+            log_info "Stripped: $(( original_size / 1024 ))KB -> $(( stripped_size / 1024 ))KB"
+        fi
+    fi
 
     # -------------------------------------------------------------------------
     # Step 4: Dedup check
@@ -383,13 +449,14 @@ check_tools() {
     fi
 
     # Check source-type-specific tools
-    local needs_crane=false needs_cosign=false
+    local needs_crane=false needs_cosign=false needs_lockfile_gen=false
     for app in "${apps[@]}"; do
         local src_type
         src_type=$(get_source_type "$app")
         case "$src_type" in
             docker) needs_crane=true ;;
             chainguard) needs_cosign=true ;;
+            lockfile) needs_lockfile_gen=true ;;
         esac
     done
 
@@ -398,6 +465,11 @@ check_tools() {
     fi
     if [[ "$needs_cosign" == true ]]; then
         require_cmd "cosign" "Install from: https://github.com/sigstore/cosign"
+    fi
+    if [[ "$needs_lockfile_gen" == true ]]; then
+        if ! command -v cdxgen &>/dev/null && ! command -v trivy &>/dev/null && ! command -v syft &>/dev/null; then
+            die "Lockfile sources require cdxgen, trivy, or syft. Install cdxgen with: npm install -g @cyclonedx/cdxgen"
+        fi
     fi
 
     # Validate SBOMIFY_TOKEN for non-dry-run
