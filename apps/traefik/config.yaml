@@ -1,5 +1,5 @@
 name: traefik
-version: "v3.7.19"
+version: "v3.8.0"
 format: spdx
 
 source:
