@@ -1,5 +1,5 @@
 name: debian
-version: "13.7"
+version: "13.8"
 format: spdx
 
 source:
