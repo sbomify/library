@@ -7,7 +7,7 @@
 #
 # The workflow will trigger when:
 # - The config.yaml is modified (including version bumps)
-# - The workflow file itself is modified
+# - The workflow file itself is modified (the template never triggers on its own edits)
 # - It is dispatched manually
 
 name: "SBOM: example-app"
@@ -19,7 +19,7 @@ on:
       - master
     paths:
       - 'apps/example-app/config.yaml'
-      - '.github/workflows/_sbom-template.yml'
+      - '.github/workflows/sbom-example-app.yml'
 
   workflow_dispatch:
     inputs:
